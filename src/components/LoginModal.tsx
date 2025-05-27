@@ -88,11 +88,12 @@ export default function LoginModal({ isOpen, onClose, setUser }: Props) {
 
 
                 }else{
+                    // might cause error fix soon
                     // Sign up
                     const cred = await registerWithEmail(email, password);
 
-                    console.log('Signed up user:', cred.user);
-
+                    console.log('Signed up user:', cred);
+                    setIsSignUp(false);
                     await verifyEmail(cred.user);
 
                     setShowVerifyMessage([true, 1])
@@ -119,11 +120,14 @@ export default function LoginModal({ isOpen, onClose, setUser }: Props) {
     };
     const handleGoogleLogin = async () => {
         try {
-            const cred = await loginWithGoogle();
-            console.log('Google Logged in user:', cred.user);
+            loginWithGoogle().then((cred) => {
+                console.log('Google Logged in user:', cred);
+                // now you can safely call onClose(), set state, etc.
+                onClose();
+            })
 
-            // now you can safely call onClose(), set state, etc.
-            onClose();
+
+
         } catch (err) {
             console.error('Google Login failed:', err);
 
@@ -267,7 +271,7 @@ export default function LoginModal({ isOpen, onClose, setUser }: Props) {
                         onClick={() => {
                             console.log('Google login');
                            // setIsLoggedIn(true);
-                            handleGoogleLogin();
+                             handleGoogleLogin();
 
 
                         }}

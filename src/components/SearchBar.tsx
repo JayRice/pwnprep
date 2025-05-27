@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
-import { tools, certifications } from '../data/routes';
+import { tools } from '../data/routes';
 import { commonPorts } from '../data/ports';
 
 interface Props {
@@ -27,10 +27,10 @@ export default function SearchBar({ onSelect, variant = 'default' }: Props) {
       ...tool,
       type: 'tool' as const
     })),
-    ...certifications.map(cert => ({
-      ...cert,
-      type: 'certification' as const
-    })),
+    // ...certifications.map(cert => ({
+    //   ...cert,
+    //   type: 'certification' as const
+    // })),
     ...commonPorts.map(port => ({
       id: `port-${port.port}`,
       title: `${port.service} (Port ${port.port})`,

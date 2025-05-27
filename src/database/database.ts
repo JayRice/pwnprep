@@ -176,6 +176,11 @@ export async function getPremiumContent(content: Record<string, string>) {
         },
         body: JSON.stringify({ content: content }),
     });
+    const json = await res.json();
+    if(!res.ok){
 
-    console.log("Response recieved! ", res)
+        console.error("Error while retrieving premium content: ", json.error);
+    }else{
+        console.log("Premium content: ", json.content);
+    }
 }

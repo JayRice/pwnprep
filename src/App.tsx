@@ -32,15 +32,7 @@ function App() {
 
 
 
-  function fetchAPI(){
-    console.log('env', import.meta.env);
-    console.log(import.meta.env.VITE_API_URL)
-    fetch(`${import.meta.env.VITE_API_URL}/api/hello`).then((res) => res.json()).then((data) => {
-      console.log(data)
-    })
-  }
 
-  fetchAPI();
 
   useAuthListener(u =>
   {

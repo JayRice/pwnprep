@@ -30,15 +30,47 @@ const analytics = getAnalytics(app);
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 
+async function handle_login() {
+    const user = auth.currentUser;
+    if(!user) throw new Error("Not signed in");
+
+    const token = await user.getIdToken();
+
+    const res = await fetch("http://localhost:5000/api/user_login", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+
+    });
+    const json = await res.json();
+    if(!res.ok){
+        console.error("Error while handling login: ", json.error);
+    }
+}
+
+
 // 2) Sign-up / Sign-in helpers
 export function registerWithEmail(email: string, pw: string) {
+    handle_login()
     return createUserWithEmailAndPassword(auth, email, pw)
+
 }
-export function loginWithEmail(email: string, pw: string) {
-    return signInWithEmailAndPassword(auth, email, pw)
+export async function loginWithEmail(email: string, pw: string) {
+   console.log("Login")
+
+    await signInWithEmailAndPassword(auth, email, pw)
+    await handle_login()
+    await auth.currentUser?.getIdToken(true);
+
 }
-export function loginWithGoogle() {
-    return signInWithPopup(auth, googleProvider)
+export async function loginWithGoogle() {
+
+    await signInWithPopup(auth, googleProvider)
+    await handle_login()
+    await auth.currentUser?.getIdToken(true);
+
 }
 export function resetPassword(email: string) {
     return sendPasswordResetEmail(auth, email)
@@ -57,4 +89,5 @@ export function useAuthListener(onChange: (user: User | null) => void) {
         const unsubscribe = onAuthStateChanged(auth, onChange)
         return unsubscribe
     }, [onChange])
+
 }
