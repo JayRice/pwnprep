@@ -9,18 +9,11 @@ import Home from './components/Home';
 import Premium from './components/Premium';
 import { Settings } from 'lucide-react';
 import NoteTaker from "./components/NoteTaker.tsx";
-
-
+import CertificationPage from "./components/Certification.tsx";
 
 import {
-  loginWithEmail,
-  loginWithGoogle,
-  registerWithEmail,
-  resetPassword,
-  signOut,
   useAuthListener
 } from './database/firebase.ts'
-import {response} from "express";
 
 
 
@@ -85,6 +78,11 @@ function App() {
           <Route path="/ports/:toolId/:sectionId" element={<ToolPage type={"port"}/>} />
 
           <Route path="/notes" element={<NoteTaker user={user} />} />
+
+
+          <Route path="/tests/:certId" element={<Navigate to="overview" replace />} />
+          <Route path="/tests/:certId/:sectionId" element={<CertificationPage />} />
+
         </Routes>
       </div>
     </Router>

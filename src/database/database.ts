@@ -168,7 +168,7 @@ export async function getPremiumContent(content: Record<string, string>) {
 
     const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:5000/api/premium", {
+    const res = await fetch("http://localhost:5000/api/premium/certifications", {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -180,7 +180,10 @@ export async function getPremiumContent(content: Record<string, string>) {
     if(!res.ok){
 
         console.error("Error while retrieving premium content: ", json.error);
+       throw new Error(json.error.message);
     }else{
-        console.log("Premium content: ", json.content);
+        console.log("Premium content: ", json);
+        return json;
+
     }
 }
