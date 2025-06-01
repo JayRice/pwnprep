@@ -11,7 +11,7 @@ const ValueProposition = () => (
       <div className="text-center mb-12">
         <h2 className="text-3xl font-bold text-gray-900 mb-4">Why Choose PwnPrep?</h2>
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Your all-in-one platform for mastering cybersecurity certifications and penetration testing tools.
+          Your all-in-one platform for acing cybersecurity certification tests and remembering penetration testing tools and commands.
         </p>
       </div>
       
@@ -28,7 +28,7 @@ const ValueProposition = () => (
           <Shield className="h-8 w-8 text-purple-600 mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Exam-Focused Learning</h3>
           <p className="text-gray-600">
-            Structured learning paths designed specifically for eJPT, CPTS, Security+, and OSCP certifications. Know exactly what to study.
+            Structured command documentation for eJPT, CPTS, and OSCP certifications with AI help for any command. Know exactly what to study.
           </p>
         </div>
         
@@ -36,7 +36,7 @@ const ValueProposition = () => (
           <Code className="h-8 w-8 text-purple-600 mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Practical Tools</h3>
           <p className="text-gray-600">
-            Access a comprehensive collection of penetration testing tools and commands, with real-world examples and use cases.
+            Access a comprehensive collection of penetration testing tools and commands.
           </p>
         </div>
       </div>
@@ -46,7 +46,7 @@ const ValueProposition = () => (
           <div className="mb-6 md:mb-0">
             <h3 className="text-2xl font-bold mb-2">Unlock Your Full Potential with Premium</h3>
             <p className="text-purple-100">
-              Get access to complete certification paths, interactive labs, private walkthroughs, and more.
+              Get access to complete certification paths, unlimited AI uses and explanations, and much more!
             </p>
             <ul className="mt-4 space-y-2">
               <li className="flex items-center">
@@ -55,11 +55,11 @@ const ValueProposition = () => (
               </li>
               <li className="flex items-center">
                 <CheckCircle2 className="h-5 w-5 mr-2" />
-                <span>Interactive practice environments</span>
+                <span>Interactive AI to help when confused</span>
               </li>
               <li className="flex items-center">
                 <CheckCircle2 className="h-5 w-5 mr-2" />
-                <span>Private walkthrough videos</span>
+                <span>Efficently take notes with AI organization</span>
               </li>
             </ul>
           </div>
@@ -77,11 +77,11 @@ const ValueProposition = () => (
   </div>
 );
 
-const CertificationSection = () => (
+export const CertificationSection = () => (
   <div className="bg-gray-50 py-16">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Certification Paths</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid md:grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition hover:scale-105">
           <div className="p-6">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
@@ -104,7 +104,7 @@ const CertificationSection = () => (
               </div>
             </div>
             <div className="mt-6">
-              <a href="/premium" className="text-purple-600 hover:text-purple-800 font-medium">
+              <a href="/tests/ejpt" className="text-purple-600 hover:text-purple-800 font-medium">
                 View Study Path →
               </a>
             </div>
@@ -133,41 +133,14 @@ const CertificationSection = () => (
               </div>
             </div>
             <div className="mt-6">
-              <a href="/premium" className="text-purple-600 hover:text-purple-800 font-medium">
+              <a href="/tests/cpts" className="text-purple-600 hover:text-purple-800 font-medium">
                 View Study Path →
               </a>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition hover:scale-105">
-          <div className="p-6">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Security+</h3>
-            <p className="text-gray-600 mb-4">CompTIA Security+ Certification</p>
-            <div className="space-y-2">
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="mr-2">•</span>
-                <span>Security fundamentals</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="mr-2">•</span>
-                <span>Network security</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500">
-                <span className="mr-2">•</span>
-                <span>Compliance</span>
-              </div>
-            </div>
-            <div className="mt-6">
-              <a href="/premium" className="text-purple-600 hover:text-purple-800 font-medium">
-                View Study Path →
-              </a>
-            </div>
-          </div>
-        </div>
+
 
         <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition hover:scale-105">
           <div className="p-6">
@@ -191,7 +164,7 @@ const CertificationSection = () => (
               </div>
             </div>
             <div className="mt-6">
-              <a href="/premium" className="text-purple-600 hover:text-purple-800 font-medium">
+              <a href="/tests/oscp" className="text-purple-600 hover:text-purple-800 font-medium">
                 View Study Path →
               </a>
             </div>

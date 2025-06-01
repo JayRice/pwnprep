@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+
+#selected-note-dropdown{
+    animation: top 250ms 1;
+}
+@keyframes top {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(0); }
+}

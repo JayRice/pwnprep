@@ -1,11 +1,16 @@
-import React, {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import { useParams, Link, useNavigate  } from 'react-router-dom';
 
 import { useStore } from '../store/useStore';
 import CodeBlock from './CodeBlock';
 import { Toaster } from 'react-hot-toast';
 
-import {getPremiumContent} from "../database/database.ts";
+import {getPremiumContent, isPremium} from "../database/database.ts";
+
+import {replaceParams} from "../regex/regex.ts"
+
+import { Lock } from 'lucide-react';
+
 
 
 interface Section {
@@ -15,7 +20,17 @@ interface Section {
     commands?: [string, string][];
     bullets?: [string, string[]][];
 }
+interface Certification {
+    id: string;
+    title: string;
+    section : Section;
+    path: string;
+    sections: Section[];
+    type?: "text" | "code";
 
+}
+
+const SECTION_PREM_LIMIT = 4;
 
 export default function CertificationPage() {
 
@@ -28,13 +43,18 @@ export default function CertificationPage() {
 
     const [sectionIndex, setSectionIndex] = useState(0);
 
-    const [cert, setCert] = useState<unknown>(null);
+    const [cert, setCert] = useState<Certification | null>(null);
 
-    const errorMessage = useRef("Page not found")
+    const [premium, setPremium] = useState(false);
+
+    const message = useRef("Loading...")
 
 
 
     useEffect(() => {
+        isPremium().then((result) => {
+            setPremium(result);
+        })
         console.log(certId, sectionId);
         getPremiumContent({certId:certId, sectionId: sectionId}).then((result) => {
 
@@ -42,17 +62,17 @@ export default function CertificationPage() {
 
         }).catch((err) => {
             navigate("/premium")
-            errorMessage.current = err.message;
+            message.current = err.message;
         })
     }, [certId, sectionId]);
 
 
 
 
-    if (!cert) {
+    if (!cert || !cert.section) {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center font-light">
-                <h1 className="text-7xl text-gray-900 mb-8">{errorMessage.current}</h1>
+                <h1 className="text-7xl text-gray-900 mb-8">{message.current}</h1>
             </div>
         );
 
@@ -68,26 +88,27 @@ export default function CertificationPage() {
     }
 
 
-    const replaceParams = (command: string) => {
-        return command
-            .replace(/\[IP\]/g, targetParams.ip || '[IP]')
-            .replace(/\[PORT\]/g, targetParams.port || '[PORT]')
-            .replace(/\[SERVICE\]/g, targetParams.service || '[SERVICE]');
-    };
+
 
     const formatBulletPoints = (section: Section) => {
 
 
         if(!section.bullets) {return}
 
-        return (section.bullets.map((data, index) => {
+        return (section.bullets.map((data) => {
             const listTitle = data[0];
             const bullets = data[1];
             return(
                 <div className={"border-2 border-purple-700 p-8 flex flex-row items-center h-full"}>
-                    <h2 className={"text-gray-700 text-2xl mb-4 mt-10 font-bold"}>{listTitle}</h2>
-                    <ul>
-                        {bullets}
+                    <h2 className={"grow-1 w-full text-white text-2xl font-bold"}>{listTitle}</h2>
+                    <ul className={"grow-1 w-full "}>
+                        {bullets.map((bullet) => (
+
+                                <li className={"p-4"}>{bullet}</li>
+
+
+                        ))}
+
                     </ul>
                 </div>
             )
@@ -103,12 +124,9 @@ export default function CertificationPage() {
             const explanation = data[1];
             return( <div>
                 <p className="text-gray-700 text-2xl mb-4 mt-10 font-bold">{explanation}</p>
-                {Array.isArray(explanation) && explanation.map((data, index) => {
-                    <CodeBlock key={`${i}-${index}`} code={replaceParams(rawCode)} />
-                })}
-                {!Array.isArray(explanation) &&
-                    <CodeBlock key={i} code={replaceParams(rawCode)} />
-                }
+
+                <CodeBlock key={i} code={replaceParams(targetParams, rawCode)} interactive={true} />
+
 
             </div>)
         }))
@@ -120,7 +138,7 @@ export default function CertificationPage() {
             <Toaster position="bottom-right"/>
 
             {/* Sidebar */}
-            <div className="w-64 bg-white border-r border-gray-200 fixed h-[calc(100vh-4rem)] top-16">
+            <div className="w-64 bg-white border-r border-gray-200 fixed h-[calc(100vh-4rem)] top-16 left-16">
                 <nav className="h-full overflow-y-auto">
 
                     <div className="p-4 mt-14">
@@ -134,6 +152,7 @@ export default function CertificationPage() {
 
 
                                 return (
+
                                     <Link
 
                                         to={`/tests/${cert.id}/${section.id}`}
@@ -146,14 +165,18 @@ export default function CertificationPage() {
                                             console.log(index)
                                             navigate(`/tests/${cert.id}/${section.id}`, {replace: true})
                                         }}
-                                        className={`block px-4 py-2 rounded-md ${
+                                        className={`block px-4 py-2 rounded-md grow-1 ${
                                             currentSection.id === section.id
                                                 ? 'bg-purple-50 text-purple-700'
                                                 : 'text-gray-600 hover:bg-gray-50'
-                                        }`}
+                                                }
+                                            ${(!premium && index > SECTION_PREM_LIMIT) ? "opacity-50":""}
+                                        `}
                                     >
                                         {section.title}
                                     </Link>
+
+
                                 )
                             })}
 

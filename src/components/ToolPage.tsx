@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { useParams, Link, useLocation, useNavigate  } from 'react-router-dom';
+import  { useState } from 'react';
+import { useParams, Link, useNavigate  } from 'react-router-dom';
 import { tools } from '../data/routes';
-// import { Lock, ChevronRight } from 'lucide-react';
-import { useStore } from '../store/useStore';
 import CodeBlock from './CodeBlock';
 import { Toaster } from 'react-hot-toast';
 import {commonPorts} from "../data/ports.ts";
-import { getAuth } from 'firebase/auth'
-import {getPremiumContent} from "../database/database.ts";
+import {useStore} from "../store/useStore.ts"
+import {replaceParams, revertParams} from "../regex/regex.ts"
+
 
 
 interface Section {
@@ -25,8 +24,8 @@ export default function ToolPage({type}: Props) {
 
   const { toolId, sectionId } =  useParams<{ toolId: string; sectionId?: string }>();
 
+  const {targetParams} = useStore();
 
-  const { targetParams } = useStore();
 
   const navigate = useNavigate();
 
@@ -71,12 +70,7 @@ export default function ToolPage({type}: Props) {
 
 
 
-  const replaceParams = (command: string) => {
-    return command
-        .replace(/\[IP\]/g, targetParams.ip || '[IP]')
-        .replace(/\[PORT\]/g, targetParams.port || '[PORT]')
-        .replace(/\[SERVICE\]/g, targetParams.service || '[SERVICE]');
-  };
+
 
   const codeBlockAndExplanation = (section: Section) => {
 
@@ -87,7 +81,7 @@ export default function ToolPage({type}: Props) {
       const explanation = data[1];
       return( <div>
         <p className="text-gray-700 text-2xl mb-4 mt-10 font-bold">{explanation}</p>
-        <CodeBlock key={index} code={replaceParams(rawCode)} />
+        <CodeBlock key={index} code={replaceParams(targetParams, rawCode) } interactive={true} />
       </div>)
     }))
   }
@@ -99,11 +93,9 @@ export default function ToolPage({type}: Props) {
         <Toaster position="bottom-right" />
 
         {/* Sidebar */}
-        <div className="w-64 bg-white border-r border-gray-200 fixed h-[calc(100vh-4rem)] top-16">
+        <div className="w-64 bg-white border-r border-gray-200 fixed h-[calc(100vh-4rem)] top-16 left-16">
           <nav className="h-full overflow-y-auto">
-            <button id={"test-button"} className={"absolute w-4 h-4 bg-purple-500 text-white top-16 z-50"}
-                    onClick={() => getPremiumContent({"certification": "cpts"})}
-            ></button>
+
             <div className="p-4 mt-14">
               <div className="flex items-center gap-2 mb-6">
                 {type=="tool" && <tool.icon className="h-6 w-6 text-purple-600" />}

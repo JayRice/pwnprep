@@ -5,13 +5,12 @@ import { useStore } from '../store/useStore';
 import SearchBar from './SearchBar';
 import LoginModal from './LoginModal';
 import {
-  loginWithEmail,
-  loginWithGoogle,
-  registerWithEmail,
-  resetPassword,
+
   signOut,
-  useAuthListener
+
 } from '../database/firebase.ts'
+import {isPremium} from "../database/database.ts";
+
 
 interface NavProps {
   user: user | null
@@ -24,11 +23,16 @@ export default function Navbar({ user, setUser }: NavProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-  const { isPremium } = useStore();
+  const [premium, setPremium] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+
+    isPremium().then((response) => {
+      setPremium(response);
+    });
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
@@ -57,18 +61,12 @@ export default function Navbar({ user, setUser }: NavProps) {
             </div>
 
             <div className="hidden md:flex items-center space-x-4">
-              <button
-                  onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-              </button>
-              <Link
+                  <Link
                   to="/premium"
                   className="flex items-center space-x-1 px-4 py-2 rounded-md bg-purple-600 text-white hover:bg-purple-700 transition"
               >
-                <Lock className="h-4 w-4" />
-                <span>{isPremium ? 'Premium Active' : 'Premium'}</span>
+                {!premium && <Lock className="h-4 w-4" />}
+                <span>{premium ? 'Premium Active' : 'Premium'}</span>
               </Link>
               {user != null ? (
                   <div className="relative" ref={dropdownRef}>

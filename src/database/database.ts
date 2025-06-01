@@ -182,8 +182,30 @@ export async function getPremiumContent(content: Record<string, string>) {
         console.error("Error while retrieving premium content: ", json.error);
        throw new Error(json.error.message);
     }else{
-        console.log("Premium content: ", json);
         return json;
+
+    }
+}
+export async function isPremium() {
+    const user = getAuth().currentUser;
+    if(!user) throw new Error("Not signed in");
+
+    const token = await user.getIdToken();
+
+    const res = await fetch("http://localhost:5000/api/premium/is_premium", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        }
+    });
+    const json = await res.json();
+    if(!res.ok){
+
+        throw new Error(json.error.message);
+    }else{
+
+        return json.premium;
 
     }
 }

@@ -58,7 +58,6 @@ export function registerWithEmail(email: string, pw: string) {
 
 }
 export async function loginWithEmail(email: string, pw: string) {
-   console.log("Login")
 
     await signInWithEmailAndPassword(auth, email, pw)
     await handle_login()

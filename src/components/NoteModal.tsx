@@ -1,10 +1,12 @@
 import React, {JSX} from "react"
-import {AlignLeft, Code, Plus, Tag, Trash, Undo2, X} from "lucide-react";
+import {AlignLeft, Archive, Code, Plus, Tag, Trash, Undo2, X} from "lucide-react";
 
 import {Note, Label} from "../data/interfaces.ts";
 import {DB_deleteNote} from "../database/database.ts";
 import CodeBlock from "./CodeBlock.tsx";
 import {useStore} from "../store/useStore.ts";
+
+import { replaceParams, revertParams } from "../regex/regex.ts"
 
 
 interface Props{
@@ -19,39 +21,22 @@ interface Props{
     TIMEOUT_LENGTH: number;
     labels: Label[];
     setMenuPos: (pos: { x: number; y: number } | null) => void
+    changeStatusOfNote: (noteId: string, status: string) => void;
+    permentatelyDeleteNote: (noteId: string) => void;
 
 }
 
-export default function NoteModal({modalRef, indexSelected, notes, setNotes, setIsLabelsDropdownOpen, isLabelsDropdownOpen, expandedNoteId, setExpandedNoteId, TIMEOUT_LENGTH, labels, setMenuPos}: Props)  {
+export default function NoteModal({modalRef, indexSelected, notes, setNotes, setIsLabelsDropdownOpen, isLabelsDropdownOpen, expandedNoteId, setExpandedNoteId, TIMEOUT_LENGTH, labels, setMenuPos, changeStatusOfNote, permentatelyDeleteNote}: Props)  {
 
 
 
     const {targetParams} = useStore();
 
-    const replaceParams = (command: string) => {
-        return command
-            .replace(/\[IP\]/g, targetParams.ip || '[IP]')
-            .replace(/\[PORT\]/g, targetParams.port || '[PORT]')
-            .replace(/\[SERVICE\]/g, targetParams.service || '[SERVICE]');
-    };
-    const revertParams = (command: string) => {
-
-        const parameterLookup: Record<string, string> = {'ip': '[IP]', 'port': '[PORT]', 'service': '[SERVICE]'};
-
-        // backslash all special characters from the parameters to ensure safe regex
-        for (const key in targetParams){
-
-            const safeParameter = targetParams[key].replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (!safeParameter) continue;
-            command = command.replace(new RegExp(safeParameter, "g"), parameterLookup[key] || safeParameter);
-        }
-        return command
-
-    };
     const handleContextMenu = (e: React.MouseEvent, index: number) => {
         e.preventDefault(); // disable default right-click
+
         setMenuPos({ x: e.pageX, y: e.pageY });
-        indexSelected.current = index;
+        if(indexSelected)  indexSelected.current = index;
     };
 
     const handleTagClick = () => {
@@ -80,36 +65,8 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
         addNoteContent(expandedNoteId, "", "text");
     }
 
-    const deleteNote = (id: string) => {
-        // Move note to delete status area
-        console.log("Before:", notes);
-
-        // This creates a **completely new array**, immutably
-        const updatedNotes = notes.map((note) =>
-            note.id === id ? { ...note, status: "trash" } : note
-        );
-
-        setNotes(updatedNotes);
 
 
-
-
-        setTimeout(() => {
-            if (expandedNoteId === id) {
-                setExpandedNoteId(null);
-            }
-        }, TIMEOUT_LENGTH)
-
-    };
-    const permetatelyDeleteNote = (noteId : string) => {
-        DB_deleteNote(noteId);
-
-        setNotes((prev) => [...prev.filter((note) => note.id !== noteId)]);
-
-        if (expandedNoteId === noteId) {
-            setExpandedNoteId(null);
-        }
-    }
 
     const addNoteContent = (noteId: string, textBlock: string, type: string) => {
         // adds a text block to the content list so that textareas and codeblocks can be seperated
@@ -194,7 +151,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
     const updateCodeContent = (codeBlockId: string, content: string) =>{
         setNotes((prev) => prev.map((note) => {
             if (note.id == expandedNoteId){
-                note.content[codeBlockId].content = revertParams(content);
+                note.content[codeBlockId].content = revertParams(targetParams, content);
             }
             return note;
         }))
@@ -234,8 +191,8 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
             }
             // codeblock every odd
             else if (note.content[i].type == "code"){
-                jsx.push(<CodeBlock id={i}  onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
-                                    refactoredCode={replaceParams(note.content[i].content)} code={note.content[i].content} deleteCodeBlock={deleteCodeBlock} className={"mb-4"}  updateCodeContent={updateCodeContent}/>);
+                jsx.push(<CodeBlock id={i} inNotes={true} onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
+                                    refactoredCode={replaceParams(targetParams, note.content[i].content)} code={note.content[i].content} deleteCodeBlock={deleteCodeBlock} className={"mb-4"}  updateCodeContent={updateCodeContent}/>);
             }
         }
         return (jsx);
@@ -261,8 +218,10 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
     };
 
 
+
+    const expandedNote = notes.filter((note) => note.id === expandedNoteId)[0];
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[99]">
             <div
                 ref={modalRef}
                 className="bg-white rounded-lg shadow-xl w-full max-w-2xl"
@@ -289,7 +248,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                     <div className={"h-80 overflow-y-scroll"}>
                         {
-                            parseNoteContent(notes.find(n => n.id === expandedNoteId))
+                            parseNoteContent(expandedNote)
                         }
 
 
@@ -332,29 +291,43 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                         <button
                             onClick={() => {
-                                const note = notes.filter(n => n.id === expandedNoteId)[0];
+
 
 
                                 // permetately delete
-                                if (note.status == "trash"){
-                                    permetatelyDeleteNote(expandedNoteId)
+                                if (expandedNote.status == "trash"){
+                                    permentatelyDeleteNote(expandedNoteId)
                                     return;
                                 }
-                                deleteNote(expandedNoteId)
+                                changeStatusOfNote(expandedNoteId, "trash")
                             }
                             }
                             className="p-2 text-red-500 hover:text-red-600 rounded-full hover:bg-red-50"
-                            title={notes.filter(n => n.id === expandedNoteId)[0].status=="trash" ? "Permenately Delete":"Delete"}
+                            title={expandedNote.status=="trash" ? "Permenately Delete":"Delete"}
                         >
                             <Trash className="h-4 w-4" />
                         </button>
-                        {notes.filter(n => n.id === expandedNoteId)[0].status == "trash" &&
+                        {expandedNote.status != "archive" &&
+                            <button
+                                onClick={() => {
+
+                                    changeStatusOfNote(expandedNoteId, "archive")
+                                }
+                                }
+                                className="p-2 text-purple-500 hover:text-purple-600 rounded-full hover:bg-red-50"
+                                title={"Archive"}
+                            >
+                                <Archive className="h-4 w-4" />
+                            </button>
+                        }
+
+                        {expandedNote.status != "active" &&
                             <button
                                 onClick={() => {
                                     handleReactivateClick(expandedNoteId)
                                 }}
                                 className="p-2 text-purple-500 hover:text-purple-600 rounded-full hover:bg-purple-50"
-                                title={"Undo Trash"}
+                                title={"Reactivate"}
                             >
                                 <Undo2 className="h-4 w-4" />
                             </button>}

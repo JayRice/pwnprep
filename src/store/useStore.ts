@@ -1,38 +1,34 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-interface TargetParams {
-  ip: string;
-  port: string;
-  service: string;
-  wordlist: string;
-}
+import { TargetParams } from '../data/interfaces.ts';
+import {PLACEHOLDERS} from '../regex/regex.ts'
 
 interface Store {
-  targetParams: TargetParams;
-  isPremium: boolean;
-  setTargetParams: (params: Partial<TargetParams>) => void;
-  setIsPremium: (value: boolean) => void;
+    targetParams: TargetParams;
+    isPremium: boolean;
+    setTargetParams: (params: Partial<TargetParams>) => void;
+    setIsPremium: (value: boolean) => void;
 }
 
+const defaultParams: TargetParams = PLACEHOLDERS.reduce((acc, key) => {
+    acc[key] = '';
+    return acc;
+}, {} as TargetParams);
+
 export const useStore = create<Store>()(
-  persist(
-    (set) => ({
-      targetParams: {
-        ip: '',
-        port: '',
-        service: '',
-        wordlist: '',
-      },
-      isPremium: false,
-      setTargetParams: (params) =>
-        set((state) => ({
-          targetParams: { ...state.targetParams, ...params },
-        })),
-      setIsPremium: (value) => set({ isPremium: value }),
-    }),
-    {
-      name: 'pwnprep-storage',
-    }
-  )
+    persist(
+        (set) => ({
+            targetParams: defaultParams,
+            isPremium: false,
+            setTargetParams: (params) =>
+                set((state) => ({
+                    targetParams: { ...state.targetParams, ...params },
+                })),
+            setIsPremium: (value) => set({ isPremium: value }),
+        }),
+        {
+            name: 'pwnprep-storage',
+        }
+    )
 );

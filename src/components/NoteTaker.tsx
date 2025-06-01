@@ -1,6 +1,6 @@
 import React, {useState, useRef, useEffect, JSX} from 'react';
 import { useStore } from "../store/useStore.ts"
-import {Plus, X, Tag, Code, Trash, AlignLeft, Undo2} from 'lucide-react';
+import {Plus, X, Tag, Code, Trash, AlignLeft, Undo2, Check, Archive} from 'lucide-react';
 import CodeBlock from './CodeBlock';
 
 
@@ -10,7 +10,6 @@ import CodeBlock from './CodeBlock';
 
 import {Note, Label} from "../data/interfaces.ts";
 
-import NoteModel from "../components/Note.tsx";
 
 import NoteModal from "../components/NoteModal.tsx"
 
@@ -30,6 +29,8 @@ export default function NoteTaker({user}: NoteTakerProps) {
     const [notes, setNotes] = useState<Note[]>([]);
     const [labels, setLabels] = useState<Label[]>([]);
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+    const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+
     const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
@@ -49,21 +50,39 @@ export default function NoteTaker({user}: NoteTakerProps) {
     const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const [isHovered, setIsHovered] = useState<string | null>(null);
+
+    const expandedNote = notes.find((note) => note.id === expandedNoteId);
 
 
     useEffect(() => {
         const handle = setTimeout(() => {
 
-            const note = notes.find((note) => note.id === expandedNoteId);
-            if (!note) {return}
+            if (selectedNotes){
+                for (const noteId of selectedNotes){
+                    const note = notes.find((note) => noteId === note.id);
+                    if (!note) continue;
+                    updateNote(note.id, {
 
-            updateNote(note.id, {
+                        title: note.title,
+                        content: note.content,
+                        labels: note.labels,
+                        codeBlocks: note.codeBlocks,
+                        status: note.status
 
-                title: note.title,
-                content: note.content,
-                labels: note.labels,
-                codeBlocks: note.codeBlocks,
-                status: note.status
+                    });
+                }
+                setSelectedNotes([])
+            }
+            if (!expandedNote) {return}
+
+            updateNote(expandedNote.id, {
+
+                title: expandedNote.title,
+                content: expandedNote.content,
+                labels: expandedNote.labels,
+                codeBlocks: expandedNote.codeBlocks,
+                status: expandedNote.status
 
             });
 
@@ -213,7 +232,6 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
 
     const handleNoteClick = (noteId: string) => {
-        console.log("NoteId: " + noteId);
         // Put note that was clicked at the front of the list
         const index = notes.findIndex(note => note.id === noteId)
         if (index == -1) return;
@@ -228,6 +246,52 @@ export default function NoteTaker({user}: NoteTakerProps) {
         setNotes(copyNotes)
 
     }
+    const changeStatusOfNote = (id: string ,status: string) => {
+        // Move note to delete status area
+
+
+
+        setNotes((prev) => prev.map((note) => {
+            return note.id === id ? { ...note, status: status } : note
+        }));
+
+
+
+
+        setTimeout(() => {
+            if (expandedNoteId === id) {
+                setExpandedNoteId(null);
+            }
+        }, TIMEOUT_LENGTH)
+
+    };
+    const changeStatusOfManyNotes = (noteIds: string[], status: string) => {
+
+        setNotes((prev) => prev.map((note) => {
+            return noteIds.includes(note.id)  ? { ...note, status: status } : note
+        }));
+
+    }
+    const permetatelyDeleteNote = (noteId : string) => {
+        DB_deleteNote(noteId);
+
+        setNotes((prev) => [...prev.filter((note) => note.id !== noteId)]);
+
+        if (expandedNoteId === noteId) {
+            setExpandedNoteId(null);
+        }
+    }
+    const permetatelyDeleteManyNotes = (noteIds: string[]) => {
+        for (const noteId of noteIds) {
+            DB_deleteNote(noteId);
+        }
+
+        setNotes((prev) => [...prev.filter((note) => !noteIds.includes(note.id))])
+    }
+
+
+
+
 
     let filteredNotes = selectedLabels.length > 0
         ? notes.filter(note =>
@@ -236,12 +300,48 @@ export default function NoteTaker({user}: NoteTakerProps) {
         : notes
     // Filter depending on what area
     filteredNotes = filteredNotes.filter(note => note.status == selectedArea)
-
-
     return (
 
 
         <div className="min-h-screen bg-gray-50 pt-28 p-6">
+            {selectedNotes.length > 0 && (
+                <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[12%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
+                    <button title={selectedArea == "trash" ? "Permenately Delete All":"Trash All"} className={"text-white  bg-gray-800 rounded-full p-2"}
+                    onClick={() => {
+                        if (selectedArea == "trash"){
+                            return permetatelyDeleteManyNotes(selectedNotes);
+                        }
+                        changeStatusOfManyNotes(selectedNotes, "trash")
+
+                    }}>
+                        <Trash className={"w-6 h-6"}></Trash>
+                    </button>
+                    <button title={"Archive All"} className={"text-white bg-gray-800 rounded-full p-2"}
+                            onClick={() => {
+                                changeStatusOfManyNotes(selectedNotes, "archive")
+
+
+                            }}>
+                        <Archive className={"w-6 h-6"}></Archive>
+                    </button>
+                    <button title={"Select All"} className={"text-white bg-gray-500 rounded-4 p-4"}
+                            onClick={() => {
+                                setSelectedNotes(notes.map((note) => {
+                                    if(note.status == selectedArea){
+                                        return note.id;
+                                    }
+                                }));
+
+                            }}>
+                        Select All
+                    </button>
+
+
+
+
+                </div>
+            )}
+
             {menuPos && (
                 <div
                     className="absolute bg-white shadow-md rounded p-2 z-[100]"
@@ -257,7 +357,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                 </div>
             )}
             {/* Sidebar */}
-            <div className="fixed left-0 top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4">
+            <div className="fixed left-0 top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35]">
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">Labels</h2>
                     <div className="space-y-2">
@@ -289,6 +389,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                     >
                                         <Trash className="h-4 w-4" />
                                     </button>
+
                                 </div>
                             ))}
                         </div>
@@ -309,6 +410,25 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                 >
 
                                     Trash
+                                </button>
+
+                            </div>
+                            <div
+                                key={"Archive"}
+                                className="flex items-center justify-between group"
+
+                            >
+                                <Archive className="h-4 w-4 m-1"/>
+                                <button
+                                    onClick={ () => handleAreaButton("archive") }
+                                    className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
+                                        selectedArea == "archive"
+                                            ? 'bg-purple-100 text-purple-700'
+                                            : 'hover:bg-gray-100'
+                                    }`}
+                                >
+
+                                    Archive
                                 </button>
 
                             </div>
@@ -343,74 +463,106 @@ export default function NoteTaker({user}: NoteTakerProps) {
             </div>
 
             {/* Main content */}
-            {/*{!mounted && <p className={"absolute top-half left-half"}>Loading Notes...</p> }*/}
-            <div className="ml-64 pl-6">
+            <div className="ml-64 pl-6  ">
                 <button
                     onClick={addNote}
 
-                    className="fixed bottom-4 right-20 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+                    className="fixed bottom-4 right-20 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99]"
                 >
                     <Plus className="h-6 w-6" />
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  ">
                     {filteredNotes.map(note => (
-                        <div
-                            key={note.id}
-                            onClick={ () => handleNoteClick(note.id)}
-                            className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow"
-                        >
-                            <input
-                                type="text"
-                                value={note.title}
-                                onChange={(e) => {
+                        <div className={"relative group bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow hover:border-gray-400 "}
+                             onMouseEnter={() => setIsHovered(note.id)}
+                             onMouseLeave={() => setIsHovered(null)}>
+                            { ((isHovered == note.id) || (selectedNotes.indexOf(note.id) !== -1)) && (
+                                <div className={"absolute  top-[-3%] left-[-3%]  rounded-full  border-purple-400 border-2 p-2 opacity-100 hover:bg-purple-400 transition-opacity "
+                                    + (selectedNotes.indexOf(note.id) !== -1 ?"bg-purple-400 ":"") }
+                                     onClick={ () => {
+                                         if(selectedNotes.indexOf(note.id) !== -1) {
+                                             setSelectedNotes(prev => prev.filter(id => id !== note.id));
+                                             return;
+                                         }
+                                         setSelectedNotes(prev => [...prev, note.id]
 
+                                         )}}
 
-                                }
+                                >
 
-                                }
-                                placeholder="Title"
-                                className="w-full font-medium mb-2 focus:outline-none text-[1.5rem] "
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                            <div className="text-gray-600 min-h-[20rem] max-h-[20rem] whitespace-pre-line overflow-y-hidden">
-                                {note.content.map((cont, i) =>
-                                    cont.type === "text" ? (
-                                        <div className={"mb-4"}>
-                                            <p key={i}>{cont.content}</p>
-                                        </div>
+                                    <Check className={"w-4 h-4 "}></Check>
 
-                                    ) : (
-                                        <div className={"bg-gray-900 text-gray-100 p-4 rounded-md mb-4"}>
-                                            <p key={i}>{cont.content == "" ? "Change Code Here!" : cont.content}</p>
-                                        </div>
-                                    )
-                                )}
-                            </div>
-
-                            {note.labels.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-2">
-                                    {note.labels.map(labelId => {
-                                        const label = labels.find(l => l.id === labelId);
-                                        return label ? (
-                                            <span
-                                                key={labelId}
-                                                className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full"
-                                            >
-                        {label.name}
-                      </span>
-                                        ) : null;
-                                    })}
                                 </div>
                             )}
+                            <div
+                                key={note.id}
+                                onClick={ () => {
+                                    handleNoteClick(note.id)
+                                    setIsHovered(null)
+                                }}
+
+                                className={"z-25 " + (selectedNotes.indexOf(note.id) !== -1 ?"border-purple-400 ":"")}
+                            >
+
+
+
+                                <input
+                                    type="text"
+                                    value={note.title}
+
+                                    onChange={(e) => {
+
+
+                                    }
+
+                                    }
+                                    placeholder="Title"
+                                    className="w-full font-medium focus:outline-none text-[1.5rem] "
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                                <div className="text-gray-600 min-h-[20rem] max-h-[20rem] whitespace-pre-line overflow-y-hidden">
+                                    {note.content.map((cont, i) =>
+                                        cont.type === "text" ? (
+                                            <div className={"mb-4"}>
+                                                <p key={i}>{cont.content}</p>
+                                            </div>
+
+                                        ) : (
+                                            <div className={"bg-gray-900 text-gray-100 p-4 rounded-md mb-4"}>
+                                                <p key={i}>{cont.content == "" ? "Change Code Here!" : cont.content}</p>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+
+                                {note.labels.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                        {note.labels.map(labelId => {
+                                            const label = labels.find(l => l.id === labelId);
+                                            return label ? (
+                                                <span
+                                                    key={labelId}
+                                                    className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full"
+                                                >
+                        {label.name}
+                      </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                )}
+
+
+                            </div>
                         </div>
+
                     ))}
                 </div>
             </div>
 
             {/* Expanded note modal */}
             {expandedNoteId && (
-                <NoteModal modalRef={modalRef} indexSelected={indexSelected} notes={notes} setNotes={setNotes}
+                <NoteModal modalRef={modalRef} permetatelyDeleteNote={permetatelyDeleteNote} changeStatusOfNote={changeStatusOfNote} indexSelected={indexSelected} notes={notes} setNotes={setNotes}
                            setIsLabelsDropdownOpen={setIsLabelsDropdownOpen} isLabelsDropdownOpen={isLabelsDropdownOpen} expandedNoteId={expandedNoteId} setExpandedNoteId={setExpandedNoteId} TIMEOUT_LENGTH={TIMEOUT_LENGTH}
                 labels={labels} setMenuPos={setMenuPos}/>
             )}

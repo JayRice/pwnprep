@@ -1,15 +1,16 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate  } from 'react-router-dom';
+import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation  } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import TopicNav from './components/TopicNav';
 import TargetParamsModal from './components/TargetParamsModal';
 import ToolPage from './components/ToolPage';
-// import PortPage from './components/PortPage';
 import Home from './components/Home';
 import Premium from './components/Premium';
 import { Settings } from 'lucide-react';
 import NoteTaker from "./components/NoteTaker.tsx";
 import CertificationPage from "./components/Certification.tsx";
+import ActionNavbar from "./components/ActionNavbar.tsx"
+import ProfilePage from "./components/ProfilePage.tsx"
 
 import {
   useAuthListener
@@ -23,13 +24,15 @@ function App() {
   const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(true);
 
+  const location = useLocation();
+
+
 
 
 
 
   useAuthListener(u =>
   {
-    console.log("User changed: ", u)
     setUser(u);
     setLoading(false);
 
@@ -50,15 +53,21 @@ function App() {
     return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
   }
   return (
-    <Router>
+    <div>
 
       <div className="min-h-screen bg-gray-50" >
         <Navbar setUser={setUser} user={user}/>
         <TopicNav />
+
+        {location.pathname !== '/notes' && <ActionNavbar />}
+
+
+
+        {location.pathname !== '/notes' && <ActionNavbar />}
         <div className="pt-28">
           <button
             onClick={() => setIsParamsModalOpen(true)}
-            className="fixed bottom-4 right-4 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition"
+            className="fixed bottom-4 right-4 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition z-[99]"
           >
             <Settings className="h-6 w-6" />
           </button>
@@ -83,9 +92,11 @@ function App() {
           <Route path="/tests/:certId" element={<Navigate to="overview" replace />} />
           <Route path="/tests/:certId/:sectionId" element={<CertificationPage />} />
 
+          <Route path="/profile" element={<ProfilePage user={user}/>}/>
+
         </Routes>
       </div>
-    </Router>
+    </div>
   );
 }
 

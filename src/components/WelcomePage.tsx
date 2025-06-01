@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import { Terminal, BookOpen, Target, Award } from 'lucide-react';
+import {CertificationSection} from "../components/home"
 
 export default function WelcomePage() {
     const navigate = useNavigate();
@@ -127,6 +128,8 @@ export default function WelcomePage() {
                         </div>
                     </div>
                 </div>
+
+                <CertificationSection></CertificationSection>
 
 
             </div>

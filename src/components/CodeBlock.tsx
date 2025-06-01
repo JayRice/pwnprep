@@ -12,14 +12,17 @@ interface CodeBlockProps {
   className? : string;
   id?: string;
   onContextMenu?: () => void;
+  inNotes: boolean;
 }
 
-export default function CodeBlock({ code, language = 'bash', interactive=false, className="", id=-1, refactoredCode="",
+export default function CodeBlock({ code, language = 'bash', interactive=false, inNotes=false, className="", id=-1, refactoredCode="",
                                       deleteCodeBlock=() => console.log("Delete CB Failed! No function."),
                                       updateCodeContent=() => console.log("Update CB Failed! No function."),
                                       onContextMenu=() => console.log("ContextMenu Failed! No function."),
 }: CodeBlockProps) {
   const [copied, setCopied] = React.useState(false);
+
+  const [chaningCode, setChangingCode] = React.useState(code);
 
   const copyToClipboard = async () => {
     try {
@@ -37,20 +40,33 @@ export default function CodeBlock({ code, language = 'bash', interactive=false, 
     <div key={id} className={classNames} onContextMenu={onContextMenu}   >
       <pre className={`language-${language} bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto`}>
         <code>
-            {interactive ?
-                <textarea
+            {(interactive && inNotes) &&
+                (<textarea
                     value={refactoredCode}
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
                     className={"bg-gray-900 text-gray-100 w-full"} maxLength={1000}
-                    onChange={(e) => {
-                        updateCodeContent(id, e.target.value );
-                }} placeholder={"Change Code here!"}></textarea> :
 
-                (code)
+                    onChange={(e) => {
+
+                        updateCodeContent(id, e.target.value );
+                }} placeholder={"Change Code here!"}></textarea>)
             }
+            {(interactive && !inNotes) &&
+                (<textarea
+                    value={chaningCode}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    className={"bg-gray-900 text-gray-100 w-full"} maxLength={1000}
+
+                    ></textarea>)
+            }
+
+            {(!interactive) && code}
 
 
         </code>
