@@ -95,7 +95,8 @@ export interface Note {
 export interface Label {
     id: string;
     name: string;
-    parentLabel?: string;
-    childLabels?: string[];
+    parentLabel: string | null;
+    childLabels: string[];
+    depth: number;
 }
 

@@ -1,14 +1,15 @@
 import {isPremium} from "../database/database.ts";
 import {useEffect, useState} from "react";
 
-import {useNavigate} from "react-router-dom";
+import {useNavigate, Link} from "react-router-dom";
 interface Props {
     user:import('firebase/auth').User | null;
 }
 export default function ProfilePage({user} : Props) {
     const [premium, setPremium] = useState(false);
-    const navigate = useNavigate();
+
     useEffect(() => {
+        if(!user) {return}
         isPremium().then((response) => {
             setPremium(response);
         });
@@ -16,9 +17,9 @@ export default function ProfilePage({user} : Props) {
 
     }, [])
     if (!user) {
-        navigate("/")
+
         return (
-            <p>No User</p>
+            <Link to={"/"} >No User Logged In, Go back home.</Link>
         )
     }
     /*
@@ -42,10 +43,14 @@ export default function ProfilePage({user} : Props) {
                 <div className={"flex flex-row gap-4"}>
                     <button className="text-white-600 text-2xl mb-6 text-blue-400 underline hover:text-blue-800 transition-colors"> Reset Password </button>
 
+                    <button className="text-white-600 text-2xl mb-6 text-blue-400 underline hover:text-blue-800 transition-colors"> Sign Out </button>
+
 
                     {premium && <button className=" text-2xl mb-6  text-blue-400 underline hover:text-blue-800 transition-colors"> Cancel Subscription  </button>}
 
                 </div>
+                <button className="text-2xl mt-14 text-red-400 underline hover:text-red-800 transition-colors"> Delete Account </button>
+
 
 
 

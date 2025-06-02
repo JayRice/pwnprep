@@ -88,6 +88,24 @@ export async function updateNote(noteId: string,
     await updateDoc(noteRef, updates);
 
 }
+export async function updateLabel(labelId: string,
+                                 updates: Partial<Omit<Label, "id">>) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) throw new Error("Must be signed in");
+
+    const labelRef = doc(
+        db,
+        "users",
+        user.uid,
+        "labels",
+        labelId
+    );
+
+    // only writes the keys present in `updates`
+    await updateDoc(labelRef, updates);
+
+}
 
 export async function addLabelToUser(label: Label) {
     const user = getAuth().currentUser;
@@ -168,7 +186,7 @@ export async function getPremiumContent(content: Record<string, string>) {
 
     const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:5000/api/premium/certifications", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/premium/certifications`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,
@@ -187,12 +205,13 @@ export async function getPremiumContent(content: Record<string, string>) {
     }
 }
 export async function isPremium() {
+
     const user = getAuth().currentUser;
     if(!user) throw new Error("Not signed in");
 
     const token = await user.getIdToken();
 
-    const res = await fetch("http://localhost:5000/api/premium/is_premium", {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/premium/is_premium`, {
         method: "POST",
         headers: {
             Authorization: `Bearer ${token}`,

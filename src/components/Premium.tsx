@@ -1,6 +1,14 @@
-import React from 'react';
+import SubscribeForm from "./Subscription.tsx"
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+interface Props {
+  user: User | null
+}
 
-function Premium() {
+function Premium({user} : Props) {
+  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_KEY);
+
+  console.log("User: ", user)
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
@@ -11,6 +19,9 @@ function Premium() {
             <p className="text-gray-600">
               Access exclusive features and advanced capabilities with our premium subscription.
             </p>
+            <Elements stripe={stripePromise}>
+              <SubscribeForm user={user}/>
+            </Elements>
           </div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import NoteTaker from "./components/NoteTaker.tsx";
 import CertificationPage from "./components/Certification.tsx";
 import ActionNavbar from "./components/ActionNavbar.tsx"
 import ProfilePage from "./components/ProfilePage.tsx"
+import Success from "./components/Success";
 
 import {
   useAuthListener
@@ -52,6 +53,7 @@ function App() {
   if (loading){
     return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
   }
+  console.log("User in APp: ", user)
   return (
     <div>
 
@@ -78,7 +80,11 @@ function App() {
         </div>
         <Routes>
           <Route path="/" element={<Home user={user}/>}  />
-          <Route path="/premium" element={<Premium />} />
+          <Route path="/home" element={<Home user={user}/>}  />
+
+          <Route path={"/success"} element={<Success />}  />
+
+          <Route path="/premium" element={<Premium user={user}/>} />
 
           <Route path="/tools/:toolId/:sectionId" element={<ToolPage type={"tool"} />} />
           <Route path="/tools/:toolId" element={<Navigate to="overview" replace />} />

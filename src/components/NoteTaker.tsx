@@ -1,7 +1,5 @@
-import React, {useState, useRef, useEffect, JSX} from 'react';
-import { useStore } from "../store/useStore.ts"
-import {Plus, X, Tag, Code, Trash, AlignLeft, Undo2, Check, Archive} from 'lucide-react';
-import CodeBlock from './CodeBlock';
+import  {useState, useRef, useEffect} from 'react';
+import {Plus, Tag, Trash , Check, Archive, ChevronDown, ChevronUp } from 'lucide-react';
 
 
 
@@ -14,7 +12,7 @@ import {Note, Label} from "../data/interfaces.ts";
 import NoteModal from "../components/NoteModal.tsx"
 
 
-import {getAllNotes, addNoteToUser, updateNote, addLabelToUser, getAllLabels ,DB_deleteLabel,DB_deleteNote} from "../database/database.ts";
+import {getAllNotes, addNoteToUser, updateNote, addLabelToUser, updateLabel, getAllLabels ,DB_deleteLabel,DB_deleteNote} from "../database/database.ts";
 
 
 interface NoteTakerProps {
@@ -34,6 +32,11 @@ export default function NoteTaker({user}: NoteTakerProps) {
     const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
+
+    const [newChildLabelId, setNewChildLabelId] = useState("");
+    const [newChildLabel, setNewChildLabel] = useState('');
+
+
     const [isLabelsDropdownOpen,setIsLabelsDropdownOpen] = useState(false)
     const [mounted, setMounted] = useState(false);
     const [selectedArea, setSelectedArea] = useState("active");
@@ -53,6 +56,11 @@ export default function NoteTaker({user}: NoteTakerProps) {
     const [isHovered, setIsHovered] = useState<string | null>(null);
 
     const expandedNote = notes.find((note) => note.id === expandedNoteId);
+
+    const reorderedLabelsRef = useRef<string[]>([]);
+
+    const [collapsedLabels, setCollapsedLabels] = useState<string[]>([]);
+
 
 
     useEffect(() => {
@@ -95,6 +103,19 @@ export default function NoteTaker({user}: NoteTakerProps) {
         // if `body` changes again before 1s, cancel the previous update
         return () => clearTimeout(handle);
     }, [notes]);
+
+    useEffect(() => {
+        console.log("Updating")
+        for (const label of labels){
+
+            updateLabel(label.id, {
+
+                name: label.name,
+                childLabels: label.childLabels
+
+            })
+        }
+    }, [labels]);
 
     useEffect(() => {
         getAllNotes().then((notes) => {
@@ -166,9 +187,6 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
         }))
     }
-
-
-
     const addNote = () => {
         const newNote: Note = {
             id: Date.now().toString(),
@@ -184,13 +202,15 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
         addNoteToUser(newNote);
     };
-
-
     const addLabel = () => {
         if (newLabelName.trim()) {
             const newLabel: Label = {
                 id: Date.now().toString(),
                 name: newLabelName.trim(),
+                parentLabel: null,
+                childLabels: [],
+                depth: 0
+
             };
             if (!newLabel) {return;}
             addLabelToUser(newLabel);
@@ -202,6 +222,43 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
         }
     };
+    const addChildLabel = (parentId: string) => {
+        if (newChildLabel.trim()) {
+            const parentLabel = labels.find((label) => label.id === parentId);
+            if(!parentLabel) return;
+            const newLabel: Label = {
+                id: Date.now().toString(),
+                name: newChildLabel.trim(),
+                parentLabel: parentId,
+                childLabels: [],
+                depth: parentLabel.depth+1
+            };
+
+            if (!newLabel) {return;}
+            addLabelToUser(newLabel);
+
+            // Add new label
+            setLabels((prev) => {
+                const updated = prev.map((label) => {
+                    if (label.id === parentId) {
+                        return {
+                            ...label,
+                            childLabels: [...label.childLabels, newLabel.id], // ✅ new array
+                        };
+                    }
+                    return label;
+                });
+
+                return [...updated, newLabel]; // ✅ also adds the new label
+            });
+
+            setNewChildLabel("");
+            setNewChildLabelId("");
+
+
+        }
+    };
+
 
     const deleteLabel = (id: string) => {
         const label = labels.find(label => label.id == id);
@@ -223,13 +280,6 @@ export default function NoteTaker({user}: NoteTakerProps) {
         }
         setSelectedLabels(selectedLabels.filter(l => l !== id));
     };
-
-
-
-
-
-
-
 
     const handleNoteClick = (noteId: string) => {
         // Put note that was clicked at the front of the list
@@ -291,8 +341,18 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
 
 
-
-
+    const recursivelyOrderLabels = ( labelIds: string[], depth: number) => {
+        for (const labelId of labelIds) {
+            const label = labels.find((label) => label.id === labelId);
+            if(!label) continue;
+            if (label.depth == depth){
+                reorderedLabelsRef.current.push(label.id)
+                if (label.childLabels.length > 0 && !collapsedLabels.includes(label.id)) {
+                    recursivelyOrderLabels( label.childLabels, label.depth+1);
+                }
+            }
+        }
+    }
     let filteredNotes = selectedLabels.length > 0
         ? notes.filter(note =>
             selectedLabels.every(labelId => note.labels.includes(labelId))
@@ -300,6 +360,12 @@ export default function NoteTaker({user}: NoteTakerProps) {
         : notes
     // Filter depending on what area
     filteredNotes = filteredNotes.filter(note => note.status == selectedArea)
+
+    reorderedLabelsRef.current = []
+    recursivelyOrderLabels(labels.map((label) => label.id), 0)
+
+    const reorderedLabels : Label[] = reorderedLabelsRef.current.map((labelId) => labels.find((label) => label.id == labelId))
+
     return (
 
 
@@ -362,17 +428,36 @@ export default function NoteTaker({user}: NoteTakerProps) {
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">Labels</h2>
                     <div className="space-y-2">
                         <div className="space-y-2">
-                            {labels.map(label => (
+                            {reorderedLabels.map(label => (
                                 <div
                                     key={label.id}
-                                    className="flex items-center justify-between group"
+                                    className={`flex items-center justify-between group relative depth-${label.depth}`}
                                 >
-                                    <Tag className="h-4 w-4 m-1"/>
+                                    {label.childLabels.length > 0 &&
+                                        <button onClick={() => {
+                                            if (collapsedLabels.includes(label.id)) {
+                                                return setCollapsedLabels(prev => prev.filter((labelId) => labelId !== label.id) )
+                                            }
+                                            setCollapsedLabels(prev => [...prev, label.id])
+                                        }}>
+                                            {!collapsedLabels.includes(label.id) ? <ChevronDown className="h-4 w-4 m-1"/>: <ChevronUp className="h-4 w-4 m-1"/>}
+
+                                        </button>
+                                    }
+
                                     <button
-                                        onClick={() => setSelectedLabels(prev =>
-                                            prev.includes(label.id)
-                                                ? prev.filter(l => l !== label.id)
-                                                : [...prev, label.id]
+                                        onClick={() => setSelectedLabels(prev => {
+                                            // Just use this function to get all labels so you can select or unselect them all
+                                            reorderedLabelsRef.current = []
+                                            recursivelyOrderLabels([label.id],label.depth)
+                                            if(prev.includes(label.id)){
+                                                return prev.filter(l => l !== label.id && !reorderedLabelsRef.current.includes(l))
+                                            }else{
+                                                return [...prev, ...[label.id, ...reorderedLabelsRef.current]]
+
+                                            }
+                                        }
+
                                         )}
                                         className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
                                             selectedLabels.includes(label.id)
@@ -383,12 +468,70 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
                                         {label.name}
                                     </button>
-                                    <button
-                                        onClick={() => deleteLabel(label.id)}
-                                        className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
-                                    >
-                                        <Trash className="h-4 w-4" />
-                                    </button>
+                                    {newChildLabelId != label.id &&
+                                        <div className={"flex flex-row gap-2"}>
+                                            {label.depth <= 3 &&
+                                                <button
+                                                    onClick={() => setNewChildLabelId(label.id)}
+                                                    className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                </button>
+                                            }
+                                            <button
+                                                onClick={() => {
+                                                    reorderedLabelsRef.current = []
+                                                    recursivelyOrderLabels([label.id],label.depth)
+                                                    for (let childIds of reorderedLabelsRef.current){
+                                                        deleteLabel(childIds)
+                                                    }
+                                                    setCollapsedLabels((prev) => prev.filter((labelId) => labelId !== label.id))
+
+                                                    // delete from the list of the parent label
+                                                    if (label.parentLabel){
+                                                        setLabels((prev) =>
+                                                            prev.map((lx) => {
+                                                                if (lx.id === label.parentLabel) {
+                                                                    const updated = {
+                                                                        ...lx,
+                                                                        childLabels: lx.childLabels.filter((lyId) => lyId !== label.id),
+                                                                    };
+                                                                    return updated;
+                                                                }
+                                                                return lx;
+                                                            })
+                                                        );
+                                                    }
+
+                                                    deleteLabel(label.id)
+
+                                                }}
+                                                className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </button>
+
+
+                                        </div>
+                                    }
+
+
+                                    {newChildLabelId == label.id && (
+                                            <div className="ml-2  left-14">
+                                                <input
+                                                    type="text"
+                                                    value={newChildLabel}
+                                                    onChange={(e) => setNewChildLabel(e.target.value)}
+                                                    placeholder="Enter label name"
+                                                    className="w-full px-3 py-2 border rounded-md"
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') addChildLabel(label.id);
+                                                        if (e.key === 'Escape') setNewChildLabelId("");
+                                                    }}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                        )}
 
                                 </div>
                             ))}
@@ -525,7 +668,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                     {note.content.map((cont, i) =>
                                         cont.type === "text" ? (
                                             <div className={"mb-4"}>
-                                                <p key={i}>{cont.content}</p>
+                                                <p key={i} >{cont.content == "" ? "Take a note...": cont.content}</p>
                                             </div>
 
                                         ) : (

@@ -94,42 +94,44 @@ export default function WelcomePage() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-lg p-6 mb-12">
-                    <div className="flex items-center gap-4 mb-6">
-                        <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Award className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <h2 className="text-xl font-semibold">Recommended Path</h2>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                            <div className="flex-1">
-                                <h3 className="font-medium text-gray-900">Complete Network Enumeration</h3>
-                                <p className="text-sm text-gray-500">Master the basics of network scanning and enumeration</p>
-                            </div>
-                            <button
-                                onClick={() => navigate('/tools/nmap')}
-                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                            >
-                                Start
-                            </button>
-                        </div>
-                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                            <div className="flex-1">
-                                <h3 className="font-medium text-gray-900">Web Application Security</h3>
-                                <p className="text-sm text-gray-500">Learn about common web vulnerabilities and exploitation</p>
-                            </div>
-                            <button
-                                onClick={() => navigate('/tools/xss')}
-                                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                            >
-                                Start
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
                 <CertificationSection></CertificationSection>
+
+                {/*<div className="bg-white rounded-xl shadow-lg p-6 mb-12">*/}
+                {/*    <div className="flex items-center gap-4 mb-6">*/}
+                {/*        <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">*/}
+                {/*            <Award className="h-6 w-6 text-purple-600" />*/}
+                {/*        </div>*/}
+                {/*        <h2 className="text-xl font-semibold">Recommended Path</h2>*/}
+                {/*    </div>*/}
+                {/*    <div className="space-y-4">*/}
+                {/*        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">*/}
+                {/*            <div className="flex-1">*/}
+                {/*                <h3 className="font-medium text-gray-900">Complete Network Enumeration</h3>*/}
+                {/*                <p className="text-sm text-gray-500">Master the basics of network scanning and enumeration</p>*/}
+                {/*            </div>*/}
+                {/*            <button*/}
+                {/*                onClick={() => navigate('/tools/nmap')}*/}
+                {/*                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"*/}
+                {/*            >*/}
+                {/*                Start*/}
+                {/*            </button>*/}
+                {/*        </div>*/}
+                {/*        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">*/}
+                {/*            <div className="flex-1">*/}
+                {/*                <h3 className="font-medium text-gray-900">Web Application Security</h3>*/}
+                {/*                <p className="text-sm text-gray-500">Learn about common web vulnerabilities and exploitation</p>*/}
+                {/*            </div>*/}
+                {/*            <button*/}
+                {/*                onClick={() => navigate('/tools/xss')}*/}
+                {/*                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"*/}
+                {/*            >*/}
+                {/*                Start*/}
+                {/*            </button>*/}
+                {/*        </div>*/}
+                {/*    </div>*/}
+                {/*</div>*/}
+
+
 
 
             </div>

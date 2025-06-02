@@ -85,13 +85,7 @@ export default function Navbar({ user, setUser }: NavProps) {
                             <User className="h-4 w-4 mr-2" />
                             Profile
                           </Link>
-                          <Link
-                              to="/settings"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Settings
-                          </Link>
+
                           <hr className="my-1" />
                           <button
                               onClick={() => {
