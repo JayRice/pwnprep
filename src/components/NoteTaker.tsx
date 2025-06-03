@@ -47,6 +47,9 @@ export default function NoteTaker({user}: NoteTakerProps) {
     const indexSelected = useRef<number | null>(null);
 
 
+    const [isAllSelected, setIsAllSelected] = useState(false);
+
+
 
     const modalRef = useRef<HTMLDivElement>(null);
 
@@ -371,7 +374,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
         <div className="min-h-screen bg-gray-50 pt-28 p-6">
             {selectedNotes.length > 0 && (
-                <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[12%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
+                <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[11%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
                     <button title={selectedArea == "trash" ? "Permenately Delete All":"Trash All"} className={"text-white  bg-gray-800 rounded-full p-2"}
                     onClick={() => {
                         if (selectedArea == "trash"){
@@ -390,16 +393,24 @@ export default function NoteTaker({user}: NoteTakerProps) {
                             }}>
                         <Archive className={"w-6 h-6"}></Archive>
                     </button>
-                    <button title={"Select All"} className={"text-white bg-gray-500 rounded-4 p-4"}
+
+                    <button title={isAllSelected ? "Unselect All":"Select All"} className={"text-white bg-purple-600 rounded-md p-4"}
                             onClick={() => {
-                                setSelectedNotes(notes.map((note) => {
-                                    if(note.status == selectedArea){
-                                        return note.id;
-                                    }
-                                }));
+                                setIsAllSelected((prev) => !prev);
+
+                                if(!isAllSelected) {
+                                   return setSelectedNotes(notes.map((note) => {
+                                        if(note.status == selectedArea){
+                                            return note.id;
+                                        }
+                                    }));
+                                }
+                                setSelectedNotes([])
+
+                                
 
                             }}>
-                        Select All
+                        {isAllSelected ? "Unselect All":"Select All"}
                     </button>
 
 
@@ -423,7 +434,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                 </div>
             )}
             {/* Sidebar */}
-            <div className="fixed left-0 top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35]">
+            <div className="fixed left-16 top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35]">
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">Labels</h2>
                     <div className="space-y-2">
@@ -473,7 +484,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                             {label.depth <= 3 &&
                                                 <button
                                                     onClick={() => setNewChildLabelId(label.id)}
-                                                    className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
+                                                    className="hidden group-hover:block p-2 text-gray-400 hover:text-purple-500"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                 </button>
@@ -536,6 +547,30 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                 </div>
                             ))}
                         </div>
+                        {isAddingLabel ? (
+                            <div className="mt-2">
+                                <input
+                                    type="text"
+                                    value={newLabelName}
+                                    onChange={(e) => setNewLabelName(e.target.value)}
+                                    placeholder="Enter label name"
+                                    className="w-full px-3 py-2 border rounded-md"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') addLabel();
+                                        if (e.key === 'Escape') setIsAddingLabel(false);
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setIsAddingLabel(true)}
+                                className="mt-2 flex items-center text-sm text-purple-600 hover:text-purple-700"
+                            >
+                                <Plus className="h-6 w-6 mr-1" />
+                                Add Label
+                            </button>
+                        )}
                         <div className="space-y-2">
                             <div
                                 key={"Trash"}
@@ -578,39 +613,21 @@ export default function NoteTaker({user}: NoteTakerProps) {
                         </div>
 
                     </div>
-                    {isAddingLabel ? (
-                        <div className="mt-2">
-                            <input
-                                type="text"
-                                value={newLabelName}
-                                onChange={(e) => setNewLabelName(e.target.value)}
-                                placeholder="Enter label name"
-                                className="w-full px-3 py-2 border rounded-md"
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') addLabel();
-                                    if (e.key === 'Escape') setIsAddingLabel(false);
-                                }}
-                                autoFocus
-                            />
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => setIsAddingLabel(true)}
-                            className="mt-2 flex items-center text-sm text-purple-600 hover:text-purple-700"
-                        >
-                            <Plus className="h-6 w-6 mr-1" />
-                            Add Label
-                        </button>
-                    )}
+
                 </div>
             </div>
 
             {/* Main content */}
-            <div className="ml-64 pl-6  ">
+            <div className="ml-[20%]  pl-6  ">
+
+                <div className={"p-16"}>
+                    <h1 className={"text-3xl text-center"}>Search A Note</h1>
+                    <input className={"w-full h-16 rounded-md p-4"}/>
+                </div>
                 <button
                     onClick={addNote}
 
-                    className="fixed bottom-4 right-20 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99]"
+                    className="fixed bottom-16 left-2 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99]"
                 >
                     <Plus className="h-6 w-6" />
                 </button>

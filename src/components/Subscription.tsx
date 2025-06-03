@@ -1,14 +1,19 @@
-import { useStripe, useElements, CardElement } from '@stripe/react-stripe-js';
-
+import {useState} from "react"
 interface Props {
     user: User | null
 }
 
 export default function SubscribeForm ({ user }: Props) {
-    const stripe = useStripe();
+    const [isDisabled, setIsDisabled] = useState(false);
+
+    const handleClick = () => {
+        setIsDisabled(true);
+        // do something...
+    };
+
 
     if (!user) {
-        return <div>Log in</div>
+        return <div className={"text-center text-3xl"}>Log in</div>
     }
 
     const handleSubscribe = async () => {
@@ -28,8 +33,14 @@ export default function SubscribeForm ({ user }: Props) {
     };
 
     return (
-        <form onSubmit={(e) => { e.preventDefault(); handleSubscribe(); }}>
-            <button type="submit" >Subscribe</button>
+        <form className={"flex"}  >
+            <button   disabled={isDisabled}
+                      onClick={(e) =>
+                      {
+                          handleClick()
+                          e.preventDefault();
+                          handleSubscribe();
+                      }} type="submit" className={"text-white p-2 rounded-lg w-full h-16 text-2xl " + (isDisabled ? "bg-purple-900 cursor-not-allowed":"bg-purple-600 hover:bg-purple-800")}>{isDisabled ? "Redirecting":"Subscribe"}</button>
         </form>
     );
 };

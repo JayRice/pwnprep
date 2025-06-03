@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { commonPorts } from '../data/ports';
-import { ChevronDown } from 'lucide-react';
+
 
 
 
@@ -10,12 +9,6 @@ export default function TopicNav() {
   const dropdownRefPorts = useRef<HTMLDivElement>(null);
   const dropdownRefTools = useRef<HTMLDivElement>(null);
 
-  const toggleSection = (section: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
 
   // close ports dropdown on outside click
   useEffect(() => {
@@ -53,7 +46,7 @@ export default function TopicNav() {
         <div className="flex items-center space-x-8 h-12">
           {/* Non-collapsible items */}
           <Link
-            to="/pricing"
+            to="/premium"
             className="text-sm hover:text-purple-400 transition-colors"
           >
             PRICING

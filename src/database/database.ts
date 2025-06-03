@@ -1,7 +1,7 @@
 import { getFirestore, doc, setDoc, updateDoc, arrayUnion, getDocs, collection, getDoc, deleteDoc} from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import {Note, Label} from "../data/interfaces.ts"
+import {Note, Label, Message, Conversation} from "../data/interfaces.ts"
 
 
 const db = getFirestore();
@@ -44,6 +44,42 @@ export async function addNoteToUser(note: Note) {
     const {id, ...data} = note;
     await setDoc(noteRef, data);
 }
+export async function addMessageToConversation(newMessages: Message[]) {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) throw new Error("Must be signed in");
+
+    const convoRef = doc(db, "users", user.uid, "conversation", "default");
+    const convoSnap = await getDoc(convoRef);
+
+    if (convoSnap.exists()) {
+        await updateDoc(convoRef, {
+            messages: newMessages,
+            updatedAt: Date.now(),
+        });
+    } else {
+        await setDoc(convoRef, {
+            messages: newMessages,
+            updatedAt: Date.now(),
+        });
+    }
+}
+export async function getConversation() {
+    const user = getAuth().currentUser;
+    if (!user) {
+        throw new Error("Not signed in");
+        return null;
+    }
+
+    const convoRef = doc(db, "users", user.uid, "conversation", "default");
+
+
+    const snapshot = await getDoc(convoRef);
+
+
+    return snapshot.data();
+}
+
 export async function getAllNotes() {
     const user = getAuth().currentUser;
     if (!user) {
@@ -180,6 +216,11 @@ export async function DB_deleteNote(noteId: string) {
     await deleteDoc(noteRef);
 }
 
+export async function updateAIConversation(){
+
+}
+
+
 export async function getPremiumContent(content: Record<string, string>) {
     const user = getAuth().currentUser;
     if(!user) throw new Error("Not signed in");
@@ -204,6 +245,7 @@ export async function getPremiumContent(content: Record<string, string>) {
 
     }
 }
+
 export async function isPremium() {
 
     const user = getAuth().currentUser;

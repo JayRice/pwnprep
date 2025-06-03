@@ -100,3 +100,13 @@ export interface Label {
     depth: number;
 }
 
+export interface Message  {
+    role: "user" | "assistant";
+    content: string;
+    timestamp?: string;
+}
+
+export interface Conversation {
+    messages: Message[];     // full conversation
+    updatedAt: number;       // for sorting
+}

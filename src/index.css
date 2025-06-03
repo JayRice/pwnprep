@@ -14,17 +14,36 @@
 
 
 .depth-1 {
-    margin-left: 10px;
+    margin-left: 5%;
 }
 .depth-2 {
-    margin-left: 20px;
+    margin-left: 15%;
 }
 .depth-3 {
-    margin-left: 30px;
+    margin-left: 25%;
 }
 .depth-4 {
-    margin-left: 40px;
+    margin-left: 35%;
 }
 .depth-5 {
-    margin-left: 50px;
+    margin-left: 45%;
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #9333ea #1a1e1e; /* thumb color, track color */
+}
+
+/* Webkit-based browsers */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #1a1e1e; /* Tailwind gray-200 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #9333ea; /* Tailwind purple-600 */
+    border-radius: 8px;
 }
