@@ -9,29 +9,27 @@ import {
   signOut,
 
 } from '../database/firebase.ts'
-import {isPremium} from "../database/database.ts";
 
 
 interface NavProps {
   user: user | null
   setUser: () => void
+  premium: boolean
 }
 
-export default function Navbar({ user, setUser }: NavProps) {
+export default function Navbar({ user, setUser, premium  }: NavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
-  const [premium, setPremium] = useState(false);
+
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
 
-    isPremium().then((response) => {
-      setPremium(response);
-    });
+
 
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -151,7 +149,7 @@ export default function Navbar({ user, setUser }: NavProps) {
                     className="flex items-center space-x-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
                 >
                   <Lock className="h-4 w-4" />
-                  <span>{isPremium ? 'Premium Active' : 'Premium'}</span>
+                  <span>{premium ? 'Premium Active' : 'Premium'}</span>
                 </Link>
                 {user != null ? (
                     <button

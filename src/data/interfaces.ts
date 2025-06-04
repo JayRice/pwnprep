@@ -84,9 +84,11 @@ export interface TargetParams {
 export interface Note {
     id: string;
     title: string;
-    content: string;
+    content: {
+        content: string;
+        type: string;
+    }[];
     labels: string[];
-    codeBlocks: string[];
     createdAt: Date;
     status: string;
 }

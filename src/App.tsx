@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation  } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import TopicNav from './components/TopicNav';
-import TargetParamsModal from './components/TargetParamsModal';
 import ToolPage from './components/ToolPage';
 import Home from './components/Home';
 import Premium from './components/Premium';
-import { Settings } from 'lucide-react';
 import NoteTaker from "./components/NoteTaker.tsx";
 import CertificationPage from "./components/Certification.tsx";
 import ActionNavbar from "./components/ActionNavbar.tsx"
 import ProfilePage from "./components/ProfilePage.tsx"
 import Success from "./components/Success";
+import {isPremium} from "./database/database.ts";
+
+import {Toaster, toast} from "react-hot-toast";
+
+
 
 import {
   useAuthListener
@@ -70,6 +73,8 @@ function App() {
 
   const location = useLocation();
 
+  const [premium, setPremium] = useState(false);
+
 
 
 
@@ -81,6 +86,11 @@ function App() {
     setLoading(false);
 
   })
+  useEffect(() => {
+    isPremium().then((response:boolean) => {
+      setPremium(response);
+    });
+  }, []);
 
   const [isParamsModalOpen, setIsParamsModalOpen] = useState(false);
 
@@ -100,7 +110,8 @@ function App() {
     <div>
 
       <div className="min-h-screen bg-gray-50 mt-32" >
-        <Navbar setUser={setUser} user={user}/>
+        <Toaster position={"bottom-right"}></Toaster>
+        <Navbar setUser={setUser} user={user} prem={premium}/>
         <TopicNav />
 
         <ActionNavbar user={user} setIsParamsModalOpen={setIsParamsModalOpen} isParamsModalOpen={isParamsModalOpen} />

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 
 interface CodeBlockProps {
   code: string;
+  inChat?: boolean;
   refactoredCode?: string;
   language?: string;
   interactive?: boolean;
@@ -15,7 +16,7 @@ interface CodeBlockProps {
   inNotes: boolean;
 }
 
-export default function CodeBlock({ code, language = 'bash', interactive=false, inNotes=false, className="", id=-1, refactoredCode="",
+export default function CodeBlock({ code, inChat = false, language = 'bash', interactive=false, inNotes=false, className="", id=-1, refactoredCode="",
                                       deleteCodeBlock=() => console.log("Delete CB Failed! No function."),
                                       updateCodeContent=() => console.log("Update CB Failed! No function."),
                                       onContextMenu=() => console.log("ContextMenu Failed! No function."),
@@ -81,13 +82,13 @@ export default function CodeBlock({ code, language = 'bash', interactive=false, 
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
 
-            <button
+            {!inChat && <button
 
                 className="absolute top-2 right-12 p-2 rounded-md bg-gray-800 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
                 title="Explain this to me"
             >
                 <Sparkles  className="h-4 w-4" />
-            </button>
+            </button>}
 
         </div>
 

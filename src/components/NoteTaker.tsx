@@ -64,6 +64,8 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
     const [collapsedLabels, setCollapsedLabels] = useState<string[]>([]);
 
+    const [searchValue, setSearchValue] = useState("");
+
 
 
     useEffect(() => {
@@ -195,11 +197,11 @@ export default function NoteTaker({user}: NoteTakerProps) {
             id: Date.now().toString(),
             title: '',
             content: [{type: "text", content: ""}, {type:"code", content: ""}],
-            labels: [...selectedLabels],
-            codeBlocks: [],
+            labels: [...new Set(selectedLabels)],
             createdAt: new Date(),
             status: "active"
         };
+        console.log("Note: ", ...selectedLabels)
         setNotes([newNote, ...notes]);
         setExpandedNoteId(newNote.id);
 
@@ -364,17 +366,27 @@ export default function NoteTaker({user}: NoteTakerProps) {
     // Filter depending on what area
     filteredNotes = filteredNotes.filter(note => note.status == selectedArea)
 
+    if(searchValue != "") {
+        filteredNotes = filteredNotes.filter((note) => {
+            // find the search value in the title or anywhere inside
+            return note.title.includes(searchValue) ||
+                note.content.filter((content) => content.content.includes(searchValue)).length > 0
+        });
+    }
+
+
     reorderedLabelsRef.current = []
     recursivelyOrderLabels(labels.map((label) => label.id), 0)
 
     const reorderedLabels : Label[] = reorderedLabelsRef.current.map((labelId) => labels.find((label) => label.id == labelId))
+
 
     return (
 
 
         <div className="min-h-screen bg-gray-50 pt-28 p-6">
             {selectedNotes.length > 0 && (
-                <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[11%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
+                <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[12%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
                     <button title={selectedArea == "trash" ? "Permenately Delete All":"Trash All"} className={"text-white  bg-gray-800 rounded-full p-2"}
                     onClick={() => {
                         if (selectedArea == "trash"){
@@ -621,11 +633,14 @@ export default function NoteTaker({user}: NoteTakerProps) {
             <div className="ml-[20%]  pl-6  ">
 
                 <div className={"p-16"}>
-                    <h1 className={"text-3xl text-center"}>Search A Note</h1>
-                    <input className={"w-full h-16 rounded-md p-4"}/>
+                    <input placeholder={"Search Notes"}
+                           value={searchValue}
+                           onChange={(e) => setSearchValue(e.target.value)}
+                           className={"w-full h-16 rounded-md p-4 relative bottom-32 border-2 border-gray-300"}/>
                 </div>
                 <button
                     onClick={addNote}
+
 
                     className="fixed bottom-16 left-2 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99]"
                 >
@@ -671,12 +686,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                     type="text"
                                     value={note.title}
 
-                                    onChange={(e) => {
 
-
-                                    }
-
-                                    }
                                     placeholder="Title"
                                     className="w-full font-medium focus:outline-none text-[1.5rem] "
                                     onClick={(e) => e.stopPropagation()}

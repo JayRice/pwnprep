@@ -44,6 +44,31 @@ export async function addNoteToUser(note: Note) {
     const {id, ...data} = note;
     await setDoc(noteRef, data);
 }
+export async function removeToken(userId: string) {
+    const user = getAuth().currentUser;
+    if(!user) throw new Error("Not signed in");
+
+    const token = await user.getIdToken();
+
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/premium/remove_token`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            content:{
+                uid: userId
+            }
+        })
+    });
+    const json = await res.json();
+    if(!res.ok){
+
+        throw new Error(json.error.message);
+    }
+
+}
 export async function addMessageToConversation(newMessages: Message[]) {
     const auth = getAuth();
     const user = auth.currentUser;
