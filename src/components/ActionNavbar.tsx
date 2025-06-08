@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
 import { commonPorts } from '../data/ports';
-import {ClipboardEdit, HdmiPort, Wrench, Bot, Settings} from 'lucide-react';
+import {ClipboardEdit, HdmiPort, Wrench, Bot, Settings, ChevronRightCircle, ChevronLeftCircle} from 'lucide-react';
 import ChatBot from "./ChatBot.tsx"
 import {Conversation} from "../data/interfaces.ts";
 import TargetParamsModal from "./TargetParamsModal.tsx";
 
 
+
+import ToggleButton from "./ToggleButton.tsx";
 
 
 const topics = [
@@ -20,12 +22,15 @@ const topics = [
     { name: 'OSINT', path: '/tools/osint' },
     { name: 'XSS', path: '/tools/xss' }
 ];
+
 interface  Props{
-    user: User;
+    user: import('firebase/auth').User | null;
     setIsParamsModalOpen: (isOpen: boolean) => void;
     isParamsModalOpen: boolean;
+    isToggled: boolean;
+    setIsToggled: (toggled: boolean) => void;
 }
-export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalOpen} : Props) {
+export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalOpen, isToggled, setIsToggled} : Props) {
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
     const dropdownRefPorts = useRef<HTMLDivElement>(null);
     const dropdownRefTools = useRef<HTMLDivElement>(null);
@@ -90,11 +95,11 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
     }, [openSections['ai']]);
 
     return (
-        <div className="fixed top-0 left-0 right-0 w-16 h-full bg-gray-900 text-white z-40 flex flex-col gap-6 pt-[8%] items-center" >
+        <div className={`position-transition fixed w-16 ${!isToggled ? "left-0":"left-[-4rem]"} top-0 left-0 right-0  h-full bg-gray-900 text-white z-[41] flex flex-col gap-6 pt-[8%] items-center`} >
 
 
 
-
+                    <ToggleButton isToggled={isToggled} setIsToggled={setIsToggled} className={ (isToggled ? "left-0":"left-12")}/>
                      <div className="relative group" ref={dropdownRefAI}>
                         <button
                             onClick={() => toggleSection("ai")}
@@ -138,7 +143,7 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                         </button>
 
                         {openSections['ports'] && (
-                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50 overflow-y-auto max-h-64">
+                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-[51] overflow-y-auto max-h-64">
                                 <div className="grid grid-cols-2 gap-2 p-3">
                                     {commonPorts.map(port => (
                                         <Link
@@ -159,15 +164,15 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                     <div className="relative group" ref={dropdownRefTools}>
                         <button
                             onClick={() => toggleSection('tools')}
-                            className="flex items-center  h-full w-full p-2  text-white  space-x-1 text-sm hover:bg-purple-600 transition-colors
-                            bg-purple-500 rounded-full"
+                            className="flex items-center  h-full w-full p-2  text-white  space-x-1  text-sm hover:bg-purple-600 transition-colors
+                            bg-purple-500 rounded-full "
                         >
 
                             <Wrench className="h-8 w-8" />
                         </button>
 
                         {openSections['tools'] && (
-                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50 overflow-y-auto max-h-64">
+                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2  overflow-y-auto max-h-64 z-[51]">
                                 <div className="grid grid-cols-2 gap-2 p-3">
                                     {topics.map(topic => (
                                         <Link

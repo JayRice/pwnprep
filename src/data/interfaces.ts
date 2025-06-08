@@ -112,3 +112,10 @@ export interface Conversation {
     messages: Message[];     // full conversation
     updatedAt: number;       // for sorting
 }
+
+export interface CustomParam {
+    name: string;
+    placeholder: string;
+    value: string;
+    id: string;
+}

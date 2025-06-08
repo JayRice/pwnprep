@@ -1,23 +1,26 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
-import { Clipboard } from 'lucide-react';
-import {CertificationSection} from "../components/home"
-
+import HomeCertificationSection from "./HomeCertificationSection.tsx"
+import {Award, Target, Terminal} from "lucide-react"
 export default function WelcomePage() {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome back!</h1>
-                    <p className="text-xl text-gray-600">Continue your cybersecurity journey</p>
+        <div className="">
+            <div className=" mx-auto min-w-[calc(100vw-1rem)]">
+                <div className={"min-h-[calc(100vh-4rem)] bg-gradient-to-b from-gray-900 to-purple-900 flex flex-col items-center justify-center text-white "}>
+                    <div className="text-center mb-12">
+                        <h1 className="text-6xl font-bold  mb-4">Welcome!</h1>
+                        <p className="text-3xl ">Continue your cybersecurity journey</p>
+                    </div>
+                    <div className=" mx-auto mb-4 w-[40%]">
+                        <h2 className="text-xl font-semibold  mb-4">Quick Search</h2>
+                        <SearchBar onSelect={(path) => navigate(path)} variant="large" />
+                    </div>
                 </div>
-                <div className="max-w-2xl mx-auto mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Search</h2>
-                    <SearchBar onSelect={(path) => navigate(path)} variant="large" />
-                </div>
+
+
+                <HomeCertificationSection/>
 
                 {/*<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">*/}
                 {/*    <div className="bg-white rounded-xl shadow-lg p-6">*/}
@@ -39,7 +42,7 @@ export default function WelcomePage() {
                 {/*        </div>*/}
                 {/*    </div>*/}
 
-                {/* */}
+
                 {/*    <div className="bg-white rounded-xl shadow-lg p-6">*/}
                 {/*        <div className="flex items-center gap-4 mb-4">*/}
                 {/*            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">*/}
@@ -66,7 +69,6 @@ export default function WelcomePage() {
                 {/*    </div>*/}
                 {/*</div>*/}
 
-                <CertificationSection></CertificationSection>
 
                 {/*<div className="bg-white rounded-xl shadow-lg p-6 mb-12">*/}
                 {/*    <div className="flex items-center gap-4 mb-6">*/}

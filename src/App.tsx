@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation  } from 'react-router-dom';
+import  {useEffect, useState} from 'react';
+import {  Routes, Route, Navigate  } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import TopicNav from './components/TopicNav';
 import ToolPage from './components/ToolPage';
@@ -12,8 +12,7 @@ import ProfilePage from "./components/ProfilePage.tsx"
 import Success from "./components/Success";
 import {isPremium} from "./database/database.ts";
 
-import {Toaster, toast} from "react-hot-toast";
-
+import {Toaster} from "react-hot-toast";
 
 
 import {
@@ -42,7 +41,7 @@ function Form({className=""}: FormProps) {
 }
 const AboutPage = () => {
   return (
-      <div className="w-full max-w-3xl mx-auto mt-16 px-4 text-black font-light">
+      <div className="w-full max-w-3xl mx-auto mt-32 px-4 text-black font-light">
         <h1 className="text-4xl font-bold text-center mb-6">About PwnPrep</h1>
 
         <p className="text-xl mb-4">
@@ -65,15 +64,14 @@ const AboutPage = () => {
   );
 };
 
+
 function App() {
   const [user, setUser] = useState<import('firebase/auth').User | null>(null)
-  const [email, setEmail] = useState('')
-  const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(true);
 
-  const location = useLocation();
-
   const [premium, setPremium] = useState(false);
+
+  const [actionBarToggled, setActionBarToggled] = useState<boolean>(false);
 
 
 
@@ -94,14 +92,14 @@ function App() {
 
   const [isParamsModalOpen, setIsParamsModalOpen] = useState(false);
 
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-
-  const toggleSection = (section: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
-  };
+  // const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  //
+  // const toggleSection = (section: string) => {
+  //   setOpenSections(prev => ({
+  //     ...prev,
+  //     [section]: !prev[section]
+  //   }));
+  // };
 
   if (loading){
     return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
@@ -109,13 +107,13 @@ function App() {
   return (
     <div>
 
-      <div className="min-h-screen bg-gray-50 mt-32" >
+      <div className="min-h-screen bg-gray-50 mt-[6rem]" >
         <Toaster position={"bottom-right"}></Toaster>
-        <Navbar setUser={setUser} user={user} prem={premium}/>
+        <Navbar user={user} premium={premium}/>
         <TopicNav />
 
-        <ActionNavbar user={user} setIsParamsModalOpen={setIsParamsModalOpen} isParamsModalOpen={isParamsModalOpen} />
-
+        <ActionNavbar user={user} setIsParamsModalOpen={setIsParamsModalOpen} isParamsModalOpen={isParamsModalOpen} isToggled={actionBarToggled}
+        setIsToggled={setActionBarToggled}/>
 
 
 
@@ -137,7 +135,7 @@ function App() {
           <Route path="/ports/:toolId" element={<Navigate to="common-ports" replace />} />
           <Route path="/ports/:toolId/:sectionId" element={<ToolPage type={"port"}/>} />
 
-          <Route path="/notes" element={<NoteTaker user={user} />} />
+          <Route path="/notes" element={<NoteTaker user={user} actionBarToggled={actionBarToggled} />} />
 
 
           <Route path="/tests/:certId" element={<Navigate to="overview" replace />} />

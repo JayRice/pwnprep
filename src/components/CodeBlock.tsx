@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Check, XCircle, Sparkles  } from 'lucide-react';
+import { Copy, Check, Sparkles  } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface CodeBlockProps {
@@ -8,22 +8,20 @@ interface CodeBlockProps {
   refactoredCode?: string;
   language?: string;
   interactive?: boolean;
-  deleteCodeBlock?: () => void;
-  updateCodeContent?: () => void;
+  updateCodeContent?: (id: number, value:string) => void;
   className? : string;
-  id?: string;
-  onContextMenu?: () => void;
+  id?: number;
+  onContextMenu?: (e : never) => void ;
   inNotes: boolean;
 }
 
 export default function CodeBlock({ code, inChat = false, language = 'bash', interactive=false, inNotes=false, className="", id=-1, refactoredCode="",
-                                      deleteCodeBlock=() => console.log("Delete CB Failed! No function."),
                                       updateCodeContent=() => console.log("Update CB Failed! No function."),
                                       onContextMenu=() => console.log("ContextMenu Failed! No function."),
 }: CodeBlockProps) {
   const [copied, setCopied] = React.useState(false);
 
-  const [chaningCode, setChangingCode] = React.useState(code);
+  const [changingCode] = React.useState(code);
 
   const copyToClipboard = async () => {
     try {
@@ -31,7 +29,7 @@ export default function CodeBlock({ code, inChat = false, language = 'bash', int
       setCopied(true);
       toast.success('Copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch  {
       toast.error('Failed to copy code');
     }
   };
@@ -57,7 +55,7 @@ export default function CodeBlock({ code, inChat = false, language = 'bash', int
             }
             {(interactive && !inNotes) &&
                 (<textarea
-                    value={chaningCode}
+                    value={changingCode}
                     autoComplete="off"
                     autoCorrect="off"
                     autoCapitalize="off"

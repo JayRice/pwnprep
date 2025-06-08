@@ -2,24 +2,22 @@ import {useEffect, useState, useRef} from "react"
 import {Conversation, Message} from "../data/interfaces.ts"
 import {addMessageToConversation, getConversation} from "../database/database.ts";
 import {getAuth} from "firebase/auth";
-import axios, { AxiosError } from "axios";
 
 
 import {toast} from "react-hot-toast"
 
 interface Props {
     isPremium: boolean;
-    user: User | null;
+    user: import('firebase/auth').User | null;
 
     conversation: Conversation | null;
-    setConversation: (conversation: Conversation) => void;
+    setConversation: (conversation: Conversation | null) => void;
 }
 
 import CodeBlock from "./CodeBlock";
 
 
 
-const REMEMBER_HISTORY_LENGTH = 10;
 
 export default function ChatBot({user, isPremium, conversation, setConversation} : Props){
 
@@ -97,10 +95,9 @@ export default function ChatBot({user, isPremium, conversation, setConversation}
             timestamp:  new Date().toISOString()
         }
 
-        setConversation((prev) => {
-            if (!prev) {return null}
-            return {...prev, messages: [...prev.messages, userMessage]}
-        })
+        if(!conversation) {return}
+        setConversation({...conversation, messages: [...conversation.messages, userMessage]})
+
         postMessage(userMessage).then((response) => {
 
             if(!response){
@@ -113,10 +110,9 @@ export default function ChatBot({user, isPremium, conversation, setConversation}
                 role: "assistant",
                 timestamp:  new Date().toISOString()
             }
-            setConversation((prev) => {
-                if (!prev) {return null}
-                return {...prev, messages: [...prev.messages, botMessage]}
-            })
+
+
+            setConversation({...conversation, messages: [...conversation.messages, botMessage]})
 
         });
 
@@ -156,9 +152,8 @@ export default function ChatBot({user, isPremium, conversation, setConversation}
 
             }}> Enter </button>
             <button className={"w-full h-[5vh] bg-red-800 hover:bg-red-900 rounded-md transition"} onClick={() => {
-                setConversation((prev) => {
-                    return {...prev, messages: []}
-                });
+                if(!conversation) {return}
+                setConversation({ ...conversation, messages: [] });
             }}> Clear Conversation </button>
 
 

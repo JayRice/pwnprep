@@ -1,66 +1,54 @@
-import React, { useState } from 'react';
-import { X, Github, Facebook, Mail } from 'lucide-react';
-import { useStore } from '../store/useStore';
-import { FirebaseError } from 'firebase/app';
-import { useNavigate } from 'react-router-dom';
+import { X, Github, Facebook } from 'lucide-react';
 
 
-
-const errorMessages: Record<string, string> = {
-    "auth/invalid-credential": "No account found with that email.",
-    "auth/wrong-password": "Incorrect password.",
-    "auth/invalid-email": "Please enter a valid email address.",
-    "auth/too-many-requests": "Too many attempts. Try again later.",
-    "auth/weak-password": "Password should be greater than 6 characters.",
-    "auth/email-already-in-use": "This email is already in use.",
-};
-
-const verifyMessages:JSX.Element[] = [
-    <p className="mt-2 text-sm text-red-600">
-    Please{' '}
-    <button
-        type="submit"
-        className="font-medium text-purple-600 hover:text-purple-500 underline"
-    >
-        verify
-    </button>{' '}
-    your email before trying to login!
-    </p>,
-
-    <p className="mt-2 text-sm text-black-600">
-     A verification email was sent to your specified email.
-    </p>
-
-
-
-]
+//
+//
+// const errorMessages: Record<string, string> = {
+//     "auth/invalid-credential": "No account found with that email.",
+//     "auth/wrong-password": "Incorrect password.",
+//     "auth/invalid-email": "Please enter a valid email address.",
+//     "auth/too-many-requests": "Too many attempts. Try again later.",
+//     "auth/weak-password": "Password should be greater than 6 characters.",
+//     "auth/email-already-in-use": "This email is already in use.",
+// };
+//
+// const verifyMessages:JSX.Element[] = [
+//     <p className="mt-2 text-sm text-red-600">
+//     Please{' '}
+//     <button
+//         type="submit"
+//         className="font-medium text-purple-600 hover:text-purple-500 underline"
+//     >
+//         verify
+//     </button>{' '}
+//     your email before trying to login!
+//     </p>,
+//
+//     <p className="mt-2 text-sm text-black-600">
+//      A verification email was sent to your specified email.
+//     </p>
+//
+//
+//
+// ]
 
 import {
-    loginWithEmail,
     loginWithGoogle,
-    registerWithEmail,
-    resetPassword,
-    signOut,
-    useAuthListener,
-    verifyEmail
 } from '../database/firebase.ts'
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
-    setUser: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose, setUser }: Props) {
+export default function LoginModal({ isOpen, onClose }: Props) {
     // const [isEmailForm, setIsEmailForm] = useState(false);
     // const [email, setEmail] = useState('');
     // const [password, setPassword] = useState('');
-    const setIsLoggedIn = useStore((state) => state.setIsLoggedIn);
 
     // const [emailError, setEmailError] = useState<[boolean, string]>([false, ""]);
 
 
-    const [isSignUp, setIsSignUp] = useState(false);
     // const [showVerifyMessage, setShowVerifyMessage] = useState<[boolean, number]>([false, 0]);
     // const navigate = useNavigate();
 
@@ -283,8 +271,6 @@ export default function LoginModal({ isOpen, onClose, setUser }: Props) {
                     <button
                         className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         onClick={() => {
-                            console.log('Facebook login');
-                            setIsLoggedIn(true);
 
                             onClose();
                         }}
@@ -296,8 +282,6 @@ export default function LoginModal({ isOpen, onClose, setUser }: Props) {
                     <button
                         className="w-full flex items-center justify-center gap-3 px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                         onClick={() => {
-                            console.log('GitHub login');
-                            setIsLoggedIn(true);
                             onClose();
                         }}
                     >

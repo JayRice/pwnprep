@@ -1,7 +1,7 @@
-import { getFirestore, doc, setDoc, updateDoc, arrayUnion, getDocs, collection, getDoc, deleteDoc} from "firebase/firestore";
+import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, getDoc, deleteDoc} from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
-import {Note, Label, Message, Conversation} from "../data/interfaces.ts"
+import {Note, Label, Message, CustomParam} from "../data/interfaces.ts"
 
 
 const db = getFirestore();
@@ -41,7 +41,8 @@ export async function addNoteToUser(note: Note) {
         "notes",
         note.id
     );
-    const {id, ...data} = note;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {id: _unused, ...data} = note;
     await setDoc(noteRef, data);
 }
 export async function removeToken(userId: string) {
@@ -93,7 +94,6 @@ export async function getConversation() {
     const user = getAuth().currentUser;
     if (!user) {
         throw new Error("Not signed in");
-        return null;
     }
 
     const convoRef = doc(db, "users", user.uid, "conversation", "default");
@@ -179,6 +179,8 @@ export async function addLabelToUser(label: Label) {
         "labels",
         label.id
     );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {id, ...data} = label;
     await setDoc(labelRef, data);
 
@@ -188,7 +190,6 @@ export async function getAllLabels(){
     const user = getAuth().currentUser;
     if (!user) {
         throw new Error("Not signed in");
-        return [];
     }
 
     const labelsCol = collection(
@@ -204,7 +205,7 @@ export async function getAllLabels(){
     // 3) Map them into Note objects, pulling in the doc.id
     const labels: Label[] = snapshot.docs.map(docSnap => ({
         id: docSnap.id,
-        ...(docSnap.data() as Omit<Note, "id">)
+        ...(docSnap.data() as Omit<Label, "id">)
     }));
 
     return labels;
@@ -219,7 +220,6 @@ export async function DB_deleteLabel(label: Label) {
     const user = getAuth().currentUser;
     if (!user) {
         throw new Error("Not signed in");
-        return;
     }
 
     const labelRef = doc(db, "users", user.uid, "labels", label.id);
@@ -232,7 +232,6 @@ export async function DB_deleteNote(noteId: string) {
     const user = getAuth().currentUser;
     if (!user) {
         throw new Error("Not signed in");
-        return;
     }
 
     const noteRef = doc(db, "users", user.uid, "notes", noteId);
@@ -241,7 +240,52 @@ export async function DB_deleteNote(noteId: string) {
     await deleteDoc(noteRef);
 }
 
-export async function updateAIConversation(){
+export async function updateCustomParam(customParamId : string, updates: Partial<CustomParam>) {
+    const user = getAuth().currentUser;
+    if (!user) {
+        throw new Error("Not signed in");
+    }
+
+
+    const paramRef = doc(db, "users", user.uid, "custom_parameters", customParamId );
+
+    await updateDoc(paramRef, updates);
+}
+export async function addCustomParam(customParam : CustomParam){
+    const user = getAuth().currentUser;
+    if (!user) {
+        throw new Error("Not signed in");
+    }
+    console.log("id: ", customParam.id);
+    const paramRef = doc(db, "users", user.uid, "custom_parameters", customParam.id);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {id, ...data} = customParam;
+    await setDoc(paramRef, data);
+}
+export async function deleteCustomParam(customParamId : string){
+    const user = getAuth().currentUser;
+    if (!user) {
+        throw new Error("Not signed in");
+    }
+
+    const paramRef = doc(db, "users", user.uid, "custom_parameters",customParamId);
+
+    await deleteDoc(paramRef);
+}
+export async function getCustomParams(){
+    const user = getAuth().currentUser;
+    if (!user) {
+        throw new Error("Not signed in");
+    }
+
+    const paramRef = collection(db, "users", user.uid, "custom_parameters");
+    const snapshot = await getDocs(paramRef);
+
+    return snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+    } as CustomParam));
 
 }
 

@@ -3,7 +3,8 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import {Check} from "lucide-react"
 interface Props {
-  user: User | null
+  user: import('firebase/auth').User | null;
+
 }
 
 function Premium({user} : Props) {

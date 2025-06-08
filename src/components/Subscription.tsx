@@ -1,6 +1,7 @@
 import {useState} from "react"
 interface Props {
-    user: User | null
+    user: import('firebase/auth').User | null;
+
 }
 
 export default function SubscribeForm ({ user }: Props) {

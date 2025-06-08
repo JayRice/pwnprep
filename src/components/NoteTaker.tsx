@@ -1,5 +1,5 @@
 import  {useState, useRef, useEffect} from 'react';
-import {Plus, Tag, Trash , Check, Archive, ChevronDown, ChevronUp } from 'lucide-react';
+import {Plus, Trash , Check, Archive, ChevronDown, ChevronUp } from 'lucide-react';
 
 
 
@@ -13,38 +13,43 @@ import NoteModal from "../components/NoteModal.tsx"
 
 
 import {getAllNotes, addNoteToUser, updateNote, addLabelToUser, updateLabel, getAllLabels ,DB_deleteLabel,DB_deleteNote} from "../database/database.ts";
+import ToggleButton from "./ToggleButton.tsx";
 
 
 interface NoteTakerProps {
-    user: user | null;
+    user: import('firebase/auth').User | null;
+    actionBarToggled: boolean;
 }
 
 
 const TIMEOUT_LENGTH = 250;
 
-export default function NoteTaker({user}: NoteTakerProps) {
+
+
+export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
     const [notes, setNotes] = useState<Note[]>([]);
     const [labels, setLabels] = useState<Label[]>([]);
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
     const [selectedNotes, setSelectedNotes] = useState<string[]>([]);
+    const [editedNotes, setEditedNotes] = useState<string[]>([]);
 
     const [expandedNoteId, setExpandedNoteId] = useState<string | null>(null);
     const [isAddingLabel, setIsAddingLabel] = useState(false);
     const [newLabelName, setNewLabelName] = useState('');
+
+
 
     const [newChildLabelId, setNewChildLabelId] = useState("");
     const [newChildLabel, setNewChildLabel] = useState('');
 
 
     const [isLabelsDropdownOpen,setIsLabelsDropdownOpen] = useState(false)
-    const [mounted, setMounted] = useState(false);
     const [selectedArea, setSelectedArea] = useState("active");
 
-    const [reload, setReload] = useState(false);
 
 
-    const indexSelected = useRef<number | null>(null);
+    const indexSelected = useRef<number>(0);
 
 
     const [isAllSelected, setIsAllSelected] = useState(false);
@@ -66,12 +71,15 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
     const [searchValue, setSearchValue] = useState("");
 
+    const [labelsBarToggled, setLabelsBarToggled] = useState<boolean>(false);
+
+
 
 
     useEffect(() => {
         const handle = setTimeout(() => {
 
-            if (selectedNotes){
+            if (selectedNotes.length > 0 || editedNotes.length > 0) {
                 for (const noteId of selectedNotes){
                     const note = notes.find((note) => noteId === note.id);
                     if (!note) continue;
@@ -80,12 +88,26 @@ export default function NoteTaker({user}: NoteTakerProps) {
                         title: note.title,
                         content: note.content,
                         labels: note.labels,
-                        codeBlocks: note.codeBlocks,
+                        status: note.status
+
+                    });
+                }
+                for (const noteId of editedNotes){
+                    const note = notes.find((note) => noteId === note.id);
+                    if (!note) continue;
+                    updateNote(note.id, {
+
+                        title: note.title,
+                        content: note.content,
+                        labels: note.labels,
                         status: note.status
 
                     });
                 }
                 setSelectedNotes([])
+                setEditedNotes([])
+
+
             }
             if (!expandedNote) {return}
 
@@ -94,7 +116,6 @@ export default function NoteTaker({user}: NoteTakerProps) {
                 title: expandedNote.title,
                 content: expandedNote.content,
                 labels: expandedNote.labels,
-                codeBlocks: expandedNote.codeBlocks,
                 status: expandedNote.status
 
             });
@@ -110,7 +131,6 @@ export default function NoteTaker({user}: NoteTakerProps) {
     }, [notes]);
 
     useEffect(() => {
-        console.log("Updating")
         for (const label of labels){
 
             updateLabel(label.id, {
@@ -139,24 +159,23 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
     useEffect(() => {
 
-        setMounted(true);
         const handleClickOutside = (event: MouseEvent) => {
             if (modalRef.current && !modalRef.current.contains(event.target as Node) && !(menuRef.current && menuRef.current.contains(event.target as Node))) {
 
                 // if note is empty when closed then delete it
-                // console.log(expandedNoteId)
-                // if(expandedNoteId){
-                //     const expandedNote = notes.filter((note) => note.id == expandedNoteId)[0];
-                //     console.log(expandedNote);
-                //     if ( (expandedNote.content.length == 1 && expandedNote.content[0].content == "") ||  (expandedNote.content.length == 0 && expandedNote.title == "")){
-                //        deleteNote(expandedNote.id);
-                //     }
+
+                // get the first note in the list because whenever you click a note it moves it to the front
+                // if(notes.length < 0) {return}
+                // const lastExpandedNote = notes[0];
+                //
+                // if ( (lastExpandedNote.content.length == 1 && lastExpandedNote.content[0].content == "") ||  (lastExpandedNote.content.length == 0 && lastExpandedNote.title == "")){
+                //     permetatelyDeleteNote(lastExpandedNote.id);
                 // }
                 setExpandedNoteId(null);
 
             }
             setMenuPos(null)
-            indexSelected.current = null;
+            indexSelected.current = -1;
         };
 
 
@@ -179,14 +198,14 @@ export default function NoteTaker({user}: NoteTakerProps) {
         setSelectedArea((prev) => prev == area ? "active":area)
     }
     const handleMenuDelete = () => {
-        if(!indexSelected.current) return;
 
+        if(indexSelected.current == null) return;
         setNotes(notes.map((note) => {
 
             if (note.id !== expandedNoteId) return note;
             const noteContent = note.content;
 
-            noteContent.splice(indexSelected.current, 1);
+            noteContent.splice(indexSelected.current as number, 1);
 
             return {...note, content: noteContent};
 
@@ -267,6 +286,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
     const deleteLabel = (id: string) => {
         const label = labels.find(label => label.id == id);
+        if (!label) {return}
         DB_deleteLabel(label);
         setLabels(labels.filter(label => label.id !== id));
         setNotes((prev) => prev.map(note => ({
@@ -344,6 +364,23 @@ export default function NoteTaker({user}: NoteTakerProps) {
         setNotes((prev) => [...prev.filter((note) => !noteIds.includes(note.id))])
     }
 
+    function swap<T>(arr: T[], i: number, j: number): void {
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    const swapNoteContent = (from: number, to: number ) => {
+
+        if (to < 0 || !expandedNote || to >= expandedNote.content.length   ){
+            console.log("RETURNINGNGNGNG")
+            return;
+        }
+        console.log(from,to)
+        setNotes(notes.map((note) => {
+            if ( note.id == expandedNoteId ){
+                swap(note.content, from, to);
+            }
+            return note;
+        }));
+    }
 
 
     const recursivelyOrderLabels = ( labelIds: string[], depth: number) => {
@@ -373,18 +410,27 @@ export default function NoteTaker({user}: NoteTakerProps) {
                 note.content.filter((content) => content.content.includes(searchValue)).length > 0
         });
     }
+    function handleToggleLogic(bothToggled: string, actionToggled: string, labelToggled: string, noneToggled: string){
+        return actionBarToggled && labelsBarToggled ? bothToggled: actionBarToggled ? actionToggled: labelsBarToggled ? labelToggled:noneToggled
+    }
 
 
     reorderedLabelsRef.current = []
     recursivelyOrderLabels(labels.map((label) => label.id), 0)
 
-    const reorderedLabels : Label[] = reorderedLabelsRef.current.map((labelId) => labels.find((label) => label.id == labelId))
+    const reorderedLabels : Label[]  = reorderedLabelsRef.current.map((labelId) =>
+        labels.find((label) => label.id == labelId)
+    ).filter((label) => label !== undefined)
 
 
     return (
 
 
         <div className="min-h-screen bg-gray-50 pt-28 p-6">
+            <ToggleButton isToggled={labelsBarToggled} setIsToggled={setLabelsBarToggled} className={
+                handleToggleLogic("left-4", "left-64 ml-[-1rem]","left-16", "left-64 ml-[3rem]") + " z-[36]"
+            }></ToggleButton>
+
             {selectedNotes.length > 0 && (
                 <div id={"selected-note-dropdown"} className={"fixed w-full h-16 bg-gray-900 top-[12%] z-[24] mt-2 flex flex-row justify-end gap-10 pr-16 items-center"}>
                     <button title={selectedArea == "trash" ? "Permenately Delete All":"Trash All"} className={"text-white  bg-gray-800 rounded-full p-2"}
@@ -411,11 +457,9 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                 setIsAllSelected((prev) => !prev);
 
                                 if(!isAllSelected) {
-                                   return setSelectedNotes(notes.map((note) => {
-                                        if(note.status == selectedArea){
-                                            return note.id;
-                                        }
-                                    }));
+                                   return setSelectedNotes(notes.filter((note) => {
+                                        return note.status == selectedArea
+                                    }).map((note) => note.id));
                                 }
                                 setSelectedNotes([])
 
@@ -439,14 +483,24 @@ export default function NoteTaker({user}: NoteTakerProps) {
                     ref={menuRef}
                 >
                     {/*<button className="block px-4 py-2 hover:bg-gray-100 w-full text-left">✏️ Edit</button>*/}
+                    <button onMouseDown={() => {
+                        if (indexSelected.current == null) return;
+                        swapNoteContent(indexSelected.current, indexSelected.current-1)
+                    }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left"><ChevronUp/>Move Up</button>
+                    <button onMouseDown={() => {
+                        if (indexSelected.current == null) return;
+                        swapNoteContent(indexSelected.current, indexSelected.current+1)
+                    }}  className="flex flex-row gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"><ChevronDown/>Move Down</button>
 
                     <button onMouseDown={() => {
+                        console.log(indexSelected.current)
                         handleMenuDelete()
-                    }}  className="block px-4 py-2 hover:bg-gray-100 w-full text-left">🗑️ Delete</button>
+                    }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left">🗑️ Delete</button>
                 </div>
             )}
+
             {/* Sidebar */}
-            <div className="fixed left-16 top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35]">
+            <div className={`fixed ${handleToggleLogic("left-[-16rem]", "left-0", "left-[-16rem]", "left-16")} top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35] position-add position-transition`}>
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">Labels</h2>
                     <div className="space-y-2">
@@ -505,7 +559,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                                                 onClick={() => {
                                                     reorderedLabelsRef.current = []
                                                     recursivelyOrderLabels([label.id],label.depth)
-                                                    for (let childIds of reorderedLabelsRef.current){
+                                                    for (const childIds of reorderedLabelsRef.current){
                                                         deleteLabel(childIds)
                                                     }
                                                     setCollapsedLabels((prev) => prev.filter((labelId) => labelId !== label.id))
@@ -630,7 +684,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
             </div>
 
             {/* Main content */}
-            <div className="ml-[20%]  pl-6  ">
+            <div className={`${!actionBarToggled ? "ml-[20%]" : "ml-[15%]"} ${handleToggleLogic("ml-4", "ml-[15%]", "ml-[10%]", "ml-[20%]")} pl-6 position-transition `}>
 
                 <div className={"p-16"}>
                     <input placeholder={"Search Notes"}
@@ -642,7 +696,7 @@ export default function NoteTaker({user}: NoteTakerProps) {
                     onClick={addNote}
 
 
-                    className="fixed bottom-16 left-2 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99]"
+                    className={`fixed bottom-16 ${actionBarToggled ? "left-[-10%]":"left-2"} bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99] position-transition`}
                 >
                     <Plus className="h-6 w-6" />
                 </button>
@@ -684,8 +738,14 @@ export default function NoteTaker({user}: NoteTakerProps) {
 
                                 <input
                                     type="text"
-                                    value={note.title}
-
+                                    value={notes.find((n) => n.id == note.id)?.title}
+                                    onChange={(e) => setNotes(notes.map((n) => {
+                                        if(n.id == note.id){
+                                            editedNotes.push(n.id)
+                                            return {...n, title: e.target.value};
+                                        }
+                                        return n;
+                                    }))}
 
                                     placeholder="Title"
                                     className="w-full font-medium focus:outline-none text-[1.5rem] "

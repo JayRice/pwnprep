@@ -21,10 +21,13 @@ export const useStore = create<Store>()(
         (set) => ({
             targetParams: defaultParams,
             isPremium: false,
-            setTargetParams: (params) =>
+            setTargetParams: (params) =>{
+                console.log(params);
                 set((state) => ({
+
                     targetParams: { ...state.targetParams, ...params },
-                })),
+                }))
+            },
             setIsPremium: (value) => set({ isPremium: value }),
         }),
         {

@@ -1,7 +1,7 @@
 import {isPremium} from "../database/database.ts";
 import {useEffect, useState} from "react";
 
-import {useNavigate, Link} from "react-router-dom";
+import {Link} from "react-router-dom";
 interface Props {
     user:import('firebase/auth').User | null;
 }

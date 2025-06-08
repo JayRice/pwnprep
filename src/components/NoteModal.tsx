@@ -1,8 +1,7 @@
 import React, {JSX} from "react"
-import {AlignLeft, Archive, Code, Plus, Tag, Trash, Undo2, X} from "lucide-react";
+import {AlignLeft, Archive, Code, Tag, Trash, Undo2, X} from "lucide-react";
 
 import {Note, Label} from "../data/interfaces.ts";
-import {DB_deleteNote} from "../database/database.ts";
 import CodeBlock from "./CodeBlock.tsx";
 import {useStore} from "../store/useStore.ts";
 
@@ -10,8 +9,8 @@ import { replaceParams, revertParams } from "../regex/regex.ts"
 
 
 interface Props{
-    modalRef: React.RefAttributes<HTMLDivElement> | null;
-    indexSelected: React.RefAttributes<number> | null;
+    modalRef: React.RefObject<HTMLDivElement> | null;
+    indexSelected: React.MutableRefObject<number> | null;
     notes: Note[];
     setNotes: (notes: Note[]) => void;
     isLabelsDropdownOpen: boolean;
@@ -22,11 +21,11 @@ interface Props{
     labels: Label[];
     setMenuPos: (pos: { x: number; y: number } | null) => void
     changeStatusOfNote: (noteId: string, status: string) => void;
-    permentatelyDeleteNote: (noteId: string) => void;
+    permetatelyDeleteNote: (noteId: string) => void;
 
 }
 
-export default function NoteModal({modalRef, indexSelected, notes, setNotes, setIsLabelsDropdownOpen, isLabelsDropdownOpen, expandedNoteId, setExpandedNoteId, TIMEOUT_LENGTH, labels, setMenuPos, changeStatusOfNote, permentatelyDeleteNote}: Props)  {
+export default function NoteModal({modalRef, indexSelected, notes, setNotes, setIsLabelsDropdownOpen, isLabelsDropdownOpen, expandedNoteId, setExpandedNoteId, labels, setMenuPos, changeStatusOfNote, permetatelyDeleteNote}: Props)  {
 
 
 
@@ -36,11 +35,12 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
         e.preventDefault(); // disable default right-click
 
         setMenuPos({ x: e.pageX, y: e.pageY });
+
         if(indexSelected)  indexSelected.current = index;
     };
 
     const handleTagClick = () => {
-        setIsLabelsDropdownOpen(prevState => !prevState);
+        setIsLabelsDropdownOpen(!isLabelsDropdownOpen);
     }
     const handleReactivateClick = (noteId: string) => {
         setNotes(notes.map((note) => {
@@ -70,7 +70,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
     const addNoteContent = (noteId: string, textBlock: string, type: string) => {
         // adds a text block to the content list so that textareas and codeblocks can be seperated
-        setNotes((prev) => prev.map(note => {
+        setNotes(notes.map(note => {
                 if (note.id === noteId) {
                     note.content.push({type: type, content: textBlock});
                 }
@@ -79,77 +79,35 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
         ));
     };
 
-    const noteLabels = labels.map(label => {
-        // grab the expanded note (or undefined if none)
-        const note = notes.find(n => n.id === expandedNoteId);
 
-        if (!note) return label;
+    // const deleteCodeBlock = (index: number) =>{
+    //
+    //     setNotes(notes.map((note) => {
+    //
+    //         const noteContent = [...note.content];
+    //
+    //         if (note.id != expandedNoteId){return note}
+    //
+    //         noteContent.splice(index,1);
+    //
+    //         // refactor text blocks
+    //         // for (let i = 0; i < note.content.length; i++) {
+    //         //     if (i <= 0) {continue;}
+    //         //     // Combine both text to avoid repitition
+    //         //     if (noteContent[i-1].type == "text" && noteContent[i].type == "text"){
+    //         //         noteContent[i-1].content += "\n" + noteContent[i].content;
+    //         //         noteContent.splice(i, 1);
+    //         //         i--;
+    //         //     }
+    //         //
+    //         // }
+    //         return {...note, content: noteContent};
+    //     }))
+    // }
 
-        // true if that note has this label
-        const isSelected = note?.labels.includes(label.id) ?? false;
 
-        // only inject the classes when selected
-        const selectedClasses = isSelected
-            ? " bg-purple-100 text-purple-700"
-            : "";
-
-        return (
-            <button
-                key={label.id}
-                onClick={() => handleAddNoteLabel(label.id)}
-                className={
-                    "flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-                    + selectedClasses
-                }
-            >
-                <Plus className="h-4 w-4 mr-2" />
-                {label.name}
-            </button>
-        );
-    });
-
-    const deleteCodeBlock = (index: number) =>{
-
-        setNotes((prev) => prev.map((note) => {
-
-            const noteContent = [...note.content];
-
-            if (note.id != expandedNoteId){return note}
-
-            noteContent.splice(index,1);
-
-            // refactor text blocks
-            // for (let i = 0; i < note.content.length; i++) {
-            //     if (i <= 0) {continue;}
-            //     // Combine both text to avoid repitition
-            //     if (noteContent[i-1].type == "text" && noteContent[i].type == "text"){
-            //         noteContent[i-1].content += "\n" + noteContent[i].content;
-            //         noteContent.splice(i, 1);
-            //         i--;
-            //     }
-            //
-            // }
-            return {...note, content: noteContent};
-        }))
-    }
-
-    const handleAddNoteLabel = (labelId: string) => {
-
-        setNotes(prev =>
-            prev.map(n =>
-                n.id === expandedNoteId
-                    ? {
-                        ...n,
-                        labels: n.labels.includes(labelId)
-                            ? n.labels.filter(id => id !== labelId)  // remove
-                            : [...n.labels, labelId]                  // add
-                    }
-                    : n
-            )
-        );
-    };
-    const updateCodeContent = (codeBlockId: string, content: string) =>{
-        setNotes((prev) => prev.map((note) => {
+    const updateCodeContent = (codeBlockId: number, content: string) =>{
+        setNotes(notes.map((note) => {
             if (note.id == expandedNoteId){
                 note.content[codeBlockId].content = revertParams(targetParams, content);
             }
@@ -161,7 +119,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
     const parseNoteContent = (note: Note) =>{
 
-        let jsx : JSX.Element[] = [];
+        const jsx : JSX.Element[] = [];
 
 
         for (let i = 0; i<note.content.length; i++){
@@ -189,26 +147,24 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                 );
             }
-            // codeblock every odd
             else if (note.content[i].type == "code"){
                 jsx.push(<CodeBlock id={i} inNotes={true} onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
-                                    refactoredCode={replaceParams(targetParams, note.content[i].content)} code={note.content[i].content} deleteCodeBlock={deleteCodeBlock} className={"mb-4"}  updateCodeContent={updateCodeContent}/>);
+                                    refactoredCode={replaceParams(targetParams, note.content[i].content)} code={note.content[i].content} className={"mb-4"}  updateCodeContent={updateCodeContent}/>);
             }
         }
         return (jsx);
     }
 
     const updateNoteInLine = (noteId: string, updates: Partial<Note>) => {
-        setNotes((prev) => prev.map(note =>
+        setNotes(notes.map(note =>
             note.id === noteId ? { ...note, ...updates } : note
         ));
     };
 
     const updateNoteContent = (noteId: string, contentIndex: number, content: string) => {
         // updates content to the actual textareas and codeblocks
-        setNotes((prev) => prev.map(note => {
+        setNotes(notes.map(note => {
                 if (note.id === noteId) {
-                    const cont = note.content[contentIndex];
 
                     note.content[contentIndex].content = content;
                 }
@@ -267,7 +223,10 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                             {isLabelsDropdownOpen &&
                                 (<div className="absolute  mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 p-1 max-h-[8rem] overflow-y-scroll">
-                                    {noteLabels}
+
+                                    {labels.map(label => (
+                                        <span key={label.id}>{label.name}</span>
+                                    ))}
 
 
                                 </div>)
@@ -296,7 +255,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                                 // permetately delete
                                 if (expandedNote.status == "trash"){
-                                    permentatelyDeleteNote(expandedNoteId)
+                                    permetatelyDeleteNote(expandedNoteId)
                                     return;
                                 }
                                 changeStatusOfNote(expandedNoteId, "trash")

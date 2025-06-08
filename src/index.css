@@ -47,3 +47,7 @@
     background-color: #9333ea; /* Tailwind purple-600 */
     border-radius: 8px;
 }
+
+.position-transition {
+    transition: margin-left 0.3s ease-in-out, margin-right 0.3s ease-in-out, left 0.3s ease-in-out, right 0.3s ease-in-out;
+}
