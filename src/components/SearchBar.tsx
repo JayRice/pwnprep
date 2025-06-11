@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { tools } from '../data/routes';
 import { commonPorts } from '../data/ports';
+import  certifications from "../data/certifications.ts"
+
+import {Certification} from "../data/interfaces.ts"
+
+
 
 interface Props {
   onSelect: (path: string) => void;
   variant?: 'default' | 'large';
+  classNames?: string;
 }
 
 interface SearchResult {
@@ -17,7 +23,7 @@ interface SearchResult {
   type: 'tool' | 'certification' | 'port';
 }
 
-export default function SearchBar({ onSelect, variant = 'default' }: Props) {
+export default function SearchBar({ onSelect, variant = 'default', classNames="" }: Props) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
@@ -37,7 +43,13 @@ export default function SearchBar({ onSelect, variant = 'default' }: Props) {
       description: port.description,
       path: `/ports/${port.port}`,
       type: 'port' as const
-    }))
+    })),
+
+
+      ...certifications.map((cert : Certification) => ({
+        ...cert,
+        type: 'certification' as const
+      }))
   ];
 
   const filteredResults = query
@@ -76,7 +88,7 @@ export default function SearchBar({ onSelect, variant = 'default' }: Props) {
   };
 
   return (
-    <div className="relative">
+    <div className={"relative " + classNames}>
       <div className="relative">
         <input
           type="text"

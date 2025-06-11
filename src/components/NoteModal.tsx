@@ -1,11 +1,12 @@
-import React, {JSX} from "react"
+import React, {JSX, useEffect} from "react"
 import {AlignLeft, Archive, Code, Tag, Trash, Undo2, X} from "lucide-react";
 
 import {Note, Label} from "../data/interfaces.ts";
 import CodeBlock from "./CodeBlock.tsx";
 import {useStore} from "../store/useStore.ts";
+import {revertParams} from "../regex/regex.ts";
 
-import { replaceParams, revertParams } from "../regex/regex.ts"
+
 
 
 interface Props{
@@ -27,7 +28,9 @@ interface Props{
 
 export default function NoteModal({modalRef, indexSelected, notes, setNotes, setIsLabelsDropdownOpen, isLabelsDropdownOpen, expandedNoteId, setExpandedNoteId, labels, setMenuPos, changeStatusOfNote, permetatelyDeleteNote}: Props)  {
 
+    useEffect(() => {
 
+    })
 
     const {targetParams} = useStore();
 
@@ -72,7 +75,7 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
         // adds a text block to the content list so that textareas and codeblocks can be seperated
         setNotes(notes.map(note => {
                 if (note.id === noteId) {
-                    note.content.push({type: type, content: textBlock});
+                    note.content.push({id: new Date().toISOString(), type: type, content: textBlock});
                 }
                 return note;
             }
@@ -106,28 +109,40 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
     // }
 
 
-    const updateCodeContent = (codeBlockId: number, content: string) =>{
-        setNotes(notes.map((note) => {
-            if (note.id == expandedNoteId){
-                note.content[codeBlockId].content = revertParams(targetParams, content);
-            }
-            return note;
-        }))
+    const updateCodeContent = (codeBlockId: string, content: string) =>{
+        revertParams(content).then((reverted) => {
+            setNotes(notes.map((note) => {
+                if (note.id == expandedNoteId){
+                    const index = note.content.findIndex((cont) => {
+                        console.log( codeBlockId)
+                        return cont.id == codeBlockId
+                    })
+                    console.log("index: ", index)
+                    note.content[index].content = reverted
+                }
+                return note;
+            }))
+        })
+
+
+
 
     }
 
 
-    const parseNoteContent = (note: Note) =>{
+    const parseNoteContent =  (note: Note) =>{
 
         const jsx : JSX.Element[] = [];
 
 
         for (let i = 0; i<note.content.length; i++){
+
+            const block = note.content[i]
             // textarea every even
-            if (note.content[i].type == "text"){
+            if (block.type == "text"){
                 jsx.push(
 
-                    <textarea key={i} value={note.content[i].content} maxLength={50000}
+                    <textarea key={block.id} value={block.content} maxLength={50000}
                               ref={((el) => {
                                   if(!el) return;
                                   el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px';
@@ -147,9 +162,13 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
                 );
             }
-            else if (note.content[i].type == "code"){
-                jsx.push(<CodeBlock id={i} inNotes={true} onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
-                                    refactoredCode={replaceParams(targetParams, note.content[i].content)} code={note.content[i].content} className={"mb-4"}  updateCodeContent={updateCodeContent}/>);
+            else if (block.type == "code"){
+                jsx.push(<CodeBlock key={block.id} id={block.id} inNotes={true} onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
+                                    refactoredCode={ note.content[i].content} code={note.content[i].content} className={"mb-4"}  updateCodeContent={updateCodeContent}
+                                    closeParent={() => {
+                                        console.log("Closing")
+                                        setExpandedNoteId(null);
+                                    }}/>);
             }
         }
         return (jsx);

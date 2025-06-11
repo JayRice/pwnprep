@@ -15,7 +15,7 @@ export default function WelcomePage() {
                     </div>
                     <div className=" mx-auto mb-4 w-[40%]">
                         <h2 className="text-xl font-semibold  mb-4">Quick Search</h2>
-                        <SearchBar onSelect={(path) => navigate(path)} variant="large" />
+                        <SearchBar onSelect={(path) => navigate(path)} variant="large" classNames={"text-black"} />
                     </div>
                 </div>
 

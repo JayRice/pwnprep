@@ -18,25 +18,33 @@ import {Toaster} from "react-hot-toast";
 import {
   useAuthListener
 } from './database/firebase.ts'
+import {useStore} from "./store/useStore.ts";
 
 
 type FormProps = {
 
+  user: import('firebase/auth').User | null;
   className?: string
 };
 
-function Form({className=""}: FormProps) {
+function Form({user, className=""}: FormProps) {
 
 
 
-  return (<form action="https://formspree.io/f/mjkwjnzq"
+  return (<form action="https://formspree.io/f/movwepjz"
                 method="POST"
-                className={"min-xl:w-[50vw] w-[75vw] h-full  flex flex-col gap-4 p-20  " + className}>
+                className={"h-full w-[50vw] mx-auto justify-center flex flex-col gap-4 p-20 rounded-md " + className}>
+    <p className={"text-2xl font-light"}> Have any questions? </p>
+    <p className={"font-light text-xl"}>We'll solve them for you in 24 to 48 business hours.</p>
 
-    <input  placeholder="Name" name="Name" className={"w-full h-[50px] border-2 border-project- bg-project"}/>
-    <input placeholder="Email" name={"Email"} type={"email"} className={"w-full h-[50px] border-2 border-project-light bg-project"}/>
-    <textarea placeholder={"Message"} name={"Message"} className={"border-2 border-project-light min-h-[20vh] bg-project"}></textarea>
-    <button type={"submit"} className={"hover:brightness-90 bg-project h-10"} >Submit</button>
+    <div className={"flex flex-col gap-4 text-white"}>
+      <input className={"hidden"} name={"UserUID"} value={user ? user.uid:"guest"}></input>
+      <input  required={true} placeholder="Name" name="Name" className={"w-full h-[50px] border-2 bg-gray-800 p-2"}/>
+      <input required={true} placeholder="Email" name={"Email"} type={"email"} className={"w-full h-[50px] border-2  bg-gray-800 p-2"}/>
+      <textarea required={true} placeholder={"Message"} name={"Message"} className={"border-2  min-h-[20vh] bg-gray-800 p-2"}></textarea>
+      <button type={"submit"} className={"hover:brightness-90 bg-gray-800 h-12"} >Submit</button>
+    </div>
+
   </form> )
 }
 const AboutPage = () => {
@@ -69,12 +77,19 @@ function App() {
   const [user, setUser] = useState<import('firebase/auth').User | null>(null)
   const [loading, setLoading] = useState(true);
 
-  const [premium, setPremium] = useState(false);
 
   const [actionBarToggled, setActionBarToggled] = useState<boolean>(false);
 
 
+  const setPremium = useStore((store) => store.setIsPremium);
 
+  useEffect(() => {
+    if (!user) return;
+    isPremium().then((response) => {
+      console.log("Is premium: ", response);
+      setPremium(response);
+    });
+  }, [user]);
 
 
 
@@ -84,11 +99,6 @@ function App() {
     setLoading(false);
 
   })
-  useEffect(() => {
-    isPremium().then((response:boolean) => {
-      setPremium(response);
-    });
-  }, []);
 
   const [isParamsModalOpen, setIsParamsModalOpen] = useState(false);
 
@@ -107,9 +117,9 @@ function App() {
   return (
     <div>
 
-      <div className="min-h-screen bg-gray-50 mt-[6rem]" >
+      <div className="min-h-screen bg-gray-50 mt-[6rem] overflow-x-hidden" >
         <Toaster position={"bottom-right"}></Toaster>
-        <Navbar user={user} premium={premium}/>
+        <Navbar user={user} premium={useStore.getState().isPremium}/>
         <TopicNav />
 
         <ActionNavbar user={user} setIsParamsModalOpen={setIsParamsModalOpen} isParamsModalOpen={isParamsModalOpen} isToggled={actionBarToggled}
@@ -123,7 +133,7 @@ function App() {
 
           <Route path="/about" element={<AboutPage />}  />
 
-          <Route path={"/contact"} element={<Form className={"flex justify-center w-full"}/>} />
+          <Route path={"/contact"} element={<Form user={user} className={"flex justify-center w-full"}/>} />
 
           <Route path={"/success"} element={<Success />}  />
 

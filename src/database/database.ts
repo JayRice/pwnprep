@@ -2,6 +2,7 @@ import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, getDoc, dele
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 import {Note, Label, Message, CustomParam} from "../data/interfaces.ts"
+import {useStore} from "../store/useStore.ts";
 
 
 const db = getFirestore();
@@ -240,12 +241,16 @@ export async function DB_deleteNote(noteId: string) {
     await deleteDoc(noteRef);
 }
 
+
+const setCustomParamsChanged =  useStore.getState().setCustomParamsChanged;
+let customParams = useStore.getState().customParams;
 export async function updateCustomParam(customParamId : string, updates: Partial<CustomParam>) {
     const user = getAuth().currentUser;
     if (!user) {
         throw new Error("Not signed in");
     }
 
+    setCustomParamsChanged(true);
 
     const paramRef = doc(db, "users", user.uid, "custom_parameters", customParamId );
 
@@ -256,6 +261,7 @@ export async function addCustomParam(customParam : CustomParam){
     if (!user) {
         throw new Error("Not signed in");
     }
+    setCustomParamsChanged(true);
     console.log("id: ", customParam.id);
     const paramRef = doc(db, "users", user.uid, "custom_parameters", customParam.id);
 
@@ -282,10 +288,18 @@ export async function getCustomParams(){
     const paramRef = collection(db, "users", user.uid, "custom_parameters");
     const snapshot = await getDocs(paramRef);
 
-    return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-    } as CustomParam));
+    customParams = useStore.getState().customParams;
+    if(customParams && customParams.length != 0 && !useStore.getState().customParamsChanged) {
+        return customParams;
+    }
+    useStore.setState({customParams: snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+        } as CustomParam))});
+
+    setCustomParamsChanged(false);
+
+    return useStore.getState().customParams;
 
 }
 

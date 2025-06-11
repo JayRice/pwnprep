@@ -1,21 +1,11 @@
-import {isPremium} from "../database/database.ts";
-import {useEffect, useState} from "react";
-
+import {useStore} from "../store/useStore.ts"
 import {Link} from "react-router-dom";
 interface Props {
     user:import('firebase/auth').User | null;
 }
 export default function ProfilePage({user} : Props) {
-    const [premium, setPremium] = useState(false);
+    const premium = useStore((state) => state.isPremium);
 
-    useEffect(() => {
-        if(!user) {return}
-        isPremium().then((response) => {
-            setPremium(response);
-        });
-
-
-    }, [])
     if (!user) {
 
         return (

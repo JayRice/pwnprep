@@ -74,6 +74,13 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
     const [labelsBarToggled, setLabelsBarToggled] = useState<boolean>(false);
 
 
+    const noteAreaRef = useRef<HTMLDivElement>(null);
+    const [maxNoteCount, setMaxNoteCount] = useState(9);
+
+
+
+
+
 
 
     useEffect(() => {
@@ -110,6 +117,8 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
             }
             if (!expandedNote) {return}
+
+            console.log("Updating expanded note:", expandedNote);
 
             updateNote(expandedNote.id, {
 
@@ -211,16 +220,42 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
         }))
     }
+
+    const handleMenuDuplicate = () => {
+
+        if(indexSelected.current == null || !expandedNote) return;
+        const index = Math.min(indexSelected.current, expandedNote.content.length - 1);
+        const originalContent = expandedNote.content[index];
+        if (!originalContent) return; // prevent undefined insert
+
+
+
+        const newContent = { ...originalContent, id: new Date().toISOString() };
+        console.log(newContent);
+
+
+        const newContentList = [
+            ...expandedNote.content.slice(0, index),
+            newContent,
+            ...expandedNote.content.slice(index),
+        ];
+
+        setNotes(notes.map((note) =>
+            note.id === expandedNoteId
+                ? { ...note, content: newContentList }
+                : note
+        ));
+    }
     const addNote = () => {
         const newNote: Note = {
             id: Date.now().toString(),
             title: '',
-            content: [{type: "text", content: ""}, {type:"code", content: ""}],
+            content: [{id: new Date().toISOString(), type: "text", content: ""},
+                {id: new Date().toISOString()+"@",type:"code", content: ""}],
             labels: [...new Set(selectedLabels)],
             createdAt: new Date(),
             status: "active"
         };
-        console.log("Note: ", ...selectedLabels)
         setNotes([newNote, ...notes]);
         setExpandedNoteId(newNote.id);
 
@@ -370,13 +405,13 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
     const swapNoteContent = (from: number, to: number ) => {
 
         if (to < 0 || !expandedNote || to >= expandedNote.content.length   ){
-            console.log("RETURNINGNGNGNG")
             return;
         }
-        console.log(from,to)
         setNotes(notes.map((note) => {
-            if ( note.id == expandedNoteId ){
-                swap(note.content, from, to);
+            if (note.id === expandedNoteId) {
+                const newContent = [...note.content];
+                swap(newContent, from, to);
+                return { ...note, content: newContent };
             }
             return note;
         }));
@@ -426,7 +461,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
     return (
 
 
-        <div className="min-h-screen bg-gray-50 pt-28 p-6">
+        <div ref={noteAreaRef} className="min-h-screen bg-gray-50 pt-28 p-6">
             <ToggleButton isToggled={labelsBarToggled} setIsToggled={setLabelsBarToggled} className={
                 handleToggleLogic("left-4", "left-64 ml-[-1rem]","left-16", "left-64 ml-[3rem]") + " z-[36]"
             }></ToggleButton>
@@ -475,7 +510,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                 </div>
             )}
 
-            {menuPos && (
+            {(menuPos && indexSelected) && (
                 <div
                     className="absolute bg-white shadow-md rounded p-2 z-[100]"
                     style={{ top: menuPos.y, left: menuPos.x }}
@@ -484,18 +519,18 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                 >
                     {/*<button className="block px-4 py-2 hover:bg-gray-100 w-full text-left">✏️ Edit</button>*/}
                     <button onMouseDown={() => {
-                        if (indexSelected.current == null) return;
                         swapNoteContent(indexSelected.current, indexSelected.current-1)
                     }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left"><ChevronUp/>Move Up</button>
                     <button onMouseDown={() => {
-                        if (indexSelected.current == null) return;
                         swapNoteContent(indexSelected.current, indexSelected.current+1)
                     }}  className="flex flex-row gap-2 px-4 py-2 hover:bg-gray-100 w-full text-left"><ChevronDown/>Move Down</button>
-
                     <button onMouseDown={() => {
-                        console.log(indexSelected.current)
+                        handleMenuDuplicate()
+                    }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left">Duplicate</button>
+                    <button onMouseDown={() => {
                         handleMenuDelete()
-                    }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left">🗑️ Delete</button>
+                    }}  className="flex flex-row gap-2 px px-4 py-2 hover:bg-gray-100 w-full text-left">Delete</button>
+
                 </div>
             )}
 
@@ -684,7 +719,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
             </div>
 
             {/* Main content */}
-            <div className={`${!actionBarToggled ? "ml-[20%]" : "ml-[15%]"} ${handleToggleLogic("ml-4", "ml-[15%]", "ml-[10%]", "ml-[20%]")} pl-6 position-transition `}>
+            <div className={` ${handleToggleLogic("ml-8", "ml-[20%]", "ml-[5%]", "ml-[23%]")} pl-6 position-transition `}>
 
                 <div className={"p-16"}>
                     <input placeholder={"Search Notes"}
@@ -701,8 +736,8 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                     <Plus className="h-6 w-6" />
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  ">
-                    {filteredNotes.map(note => (
+                <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  ">
+                    {filteredNotes.slice(0, maxNoteCount).map(note => (
                         <div className={"relative group bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow hover:border-gray-400 "}
                              onMouseEnter={() => setIsHovered(note.id)}
                              onMouseLeave={() => setIsHovered(null)}>
@@ -711,8 +746,8 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                                     + (selectedNotes.indexOf(note.id) !== -1 ?"bg-purple-400 ":"") }
                                      onClick={ () => {
                                          if(selectedNotes.indexOf(note.id) !== -1) {
-                                             setSelectedNotes(prev => prev.filter(id => id !== note.id));
-                                             return;
+                                             return setSelectedNotes(prev => prev.filter(id => id !== note.id));
+
                                          }
                                          setSelectedNotes(prev => [...prev, note.id]
 
@@ -788,6 +823,13 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
                     ))}
                 </div>
+                {!(maxNoteCount >= filteredNotes.length) && <div className={"w-full h-16 flex items-center justify-center mt-4 font-light cursor-pointer hover:bg-gray-100"}>
+                    <a onClick={(e) => {
+                        e.preventDefault();
+
+                        setMaxNoteCount((prev) => prev+9)
+                    }}> See more Notes </a>
+                </div>}
             </div>
 
             {/* Expanded note modal */}

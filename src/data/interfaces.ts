@@ -85,6 +85,7 @@ export interface Note {
     id: string;
     title: string;
     content: {
+        id: string
         content: string;
         type: string;
     }[];
@@ -106,11 +107,13 @@ export interface Message  {
     role: "user" | "assistant";
     content: string;
     timestamp?: string;
+    type:string;
 }
 
 export interface Conversation {
     messages: Message[];     // full conversation
     updatedAt: number;       // for sorting
+
 }
 
 export interface CustomParam {
@@ -118,4 +121,12 @@ export interface CustomParam {
     placeholder: string;
     value: string;
     id: string;
+}
+
+export interface Certification  {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;
+    path: string;
 }

@@ -171,10 +171,10 @@ export default function Home({user}: HomeProps) {
         <div>
           <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-gray-900 to-purple-900 flex flex-col items-center justify-center text-center px-4">
             <h1 className="text-6xl font-bold text-white mb-4">
-              Learn Cybersecurity
+              Take Cybersecurity Notes
             </h1>
             <p className="text-xl text-purple-200 mb-8">
-              With the world's most comprehensive penetration testing tutorials.
+              With the world's most efficient cybersecurity note taking app
             </p>
             <div className="w-full max-w-2xl">
               <SearchBar onSelect={handleSearch} variant="large" />

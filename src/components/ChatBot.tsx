@@ -1,4 +1,4 @@
-import {useEffect, useState, useRef} from "react"
+import React, {useEffect, useState, useRef} from "react"
 import {Conversation, Message} from "../data/interfaces.ts"
 import {addMessageToConversation, getConversation} from "../database/database.ts";
 import {getAuth} from "firebase/auth";
@@ -7,23 +7,41 @@ import {getAuth} from "firebase/auth";
 import {toast} from "react-hot-toast"
 
 interface Props {
-    isPremium: boolean;
     user: import('firebase/auth').User | null;
 
     conversation: Conversation | null;
-    setConversation: (conversation: Conversation | null) => void;
+    setConversation: React.Dispatch<React.SetStateAction<Conversation | null>>;
 }
 
 import CodeBlock from "./CodeBlock";
+import {useStore} from "../store/useStore.ts";
 
 
 
 
-export default function ChatBot({user, isPremium, conversation, setConversation} : Props){
+export default function ChatBot({user, conversation, setConversation} : Props){
+
+    const isPremium = useStore((state) => state.isPremium);
+
 
     const [isDisable, setDisable] = useState<boolean>(!(user && isPremium))
 
     const [userMessage, setUserMessage] = useState("");
+
+    const AIMessage = useStore((state) => state.AIMessage)
+    const setAIMessage = useStore((state) => state.setAIMessage)
+
+
+    const [isBotThinking, setBotThinking] = useState<boolean>(false)
+
+
+    useEffect(() => {
+        if(AIMessage!=""){
+            setUserMessage(AIMessage)
+        }
+    }, []);
+
+
 
 
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -41,6 +59,27 @@ export default function ChatBot({user, isPremium, conversation, setConversation}
         }
 
     }, []);
+
+    type ParsedBlock = {
+        type: "code" | "text";
+        content: string;
+    };
+
+    function parseTaggedResponse(input: string): ParsedBlock[] {
+        const regex = /<\s*(c|t)\s*>([\s\S]*?)<\s*\/\s*\1\s*>/gi;
+        const result: ParsedBlock[] = [];
+
+        let match;
+        while ((match = regex.exec(input)) !== null) {
+            const [, tag, content] = match;
+            result.push({
+                type: tag.toLowerCase() === "c" ? "code" : "text",
+                content: content.trim(),
+            });
+        }
+
+        return result;
+    }
     const postMessage = async (message: Message) => {
 
         const user = getAuth().currentUser;
@@ -81,82 +120,164 @@ export default function ChatBot({user, isPremium, conversation, setConversation}
 
         addMessageToConversation(conversation.messages);
 
-        if (messageListRef.current) {
-            //messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
+
+        setTimeout(() => {
+            if(messageListRef.current)
             messageListRef.current.scrollIntoView({behavior: "smooth", block: "end"});
-        }
-    }, [conversation]);
+
+        }, 250)
+
+    }, [conversation, isBotThinking]);
 
     const addMessage = async (message: string) =>{
         setDisable(true)
         const userMessage : Message = {
             content: message,
             role: "user",
-            timestamp:  new Date().toISOString()
+            timestamp:  new Date().toISOString(),
+            type: "text"
         }
 
         if(!conversation) {return}
-        setConversation({...conversation, messages: [...conversation.messages, userMessage]})
+        setConversation((prev) => {
+            if (!prev) return prev;
 
+            return {
+                ...prev,
+                messages: [...prev.messages, userMessage],
+                updatedAt: Date.now(),
+            };
+        });
+        setBotThinking(true);
         postMessage(userMessage).then((response) => {
-
+            setBotThinking(false);
             if(!response){
-                return toast("Too many requests - try again later.");
+                return toast("Something went wrong - try again later.");
             }
 
             setDisable(false)
-            const botMessage : Message = {
-                content: response.content,
-                role: "assistant",
-                timestamp:  new Date().toISOString()
+            const messages: Message[] = []
+
+            const parsed = parseTaggedResponse(response.content);
+            console.log("PArsed: ", parsed, response)
+
+            if(!parsed){
+                return toast("Something went wrong - try again later.");
+            }
+            for (const message of parsed){
+                if(!message.content || !message.type){continue}
+                const botMessage : Message = {
+                    content: message.content,
+                    role: "assistant",
+                    timestamp:  new Date().toISOString(),
+                    type: message.type
+                }
+                messages.push(botMessage);
             }
 
+            if(messages.length == 0){
+                return toast("Something went wrong with this assistant... try again later.")
+            }
 
-            setConversation({...conversation, messages: [...conversation.messages, botMessage]})
+            setConversation((prev) => {
+                if (!prev) return prev;
+
+                return {
+                    ...prev,
+                    messages: [...prev.messages, ...messages],
+                    updatedAt: Date.now(),
+                };
+            });
 
         });
 
     }
 
+    useEffect(() => {
+        if (isBotThinking && messageListRef.current) {
+            messageListRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+    }, [isBotThinking]);
 
-    return (<div className={"w-full h-full p-2"}>
 
-        <div className={"h-[35vh] m-4 mb-12 flex items-center justify-between flex-col overflow-y-auto gap-4 p-2 pr-4 custom-scrollbar break-words "}>
-            <div className={"bg-purple-700 w-full h-auto p-2 border-lg relative rounded-lg  "}>
-                <p className={"text-xl"}>Hey, I'm your personal AI assistant. Ask me anything cybersecurity related. </p>
+    return (<div className="w-full h-full p-2 overflow-hidden">
+            <div className="h-[50vh] m-4 mb-12 flex flex-col justify-between gap-4 p-2 pr-4 overflow-y-auto custom-scrollbar">
+
+                <div className="bg-purple-700 w-full p-3 rounded-lg break-words overflow-wrap break-word whitespace-pre-wrap">
+                    <p className="text-xl text-white">
+                        Hey, I'm your personal AI assistant. Ask me anything cybersecurity related.
+                    </p>
+                </div>
+
+                {conversation && (
+                    <div ref={messageListRef} className="flex flex-col gap-4">
+
+                        {conversation.messages.map((message, idx) => {
+
+                            return message.type == "text" ? (<div
+                                    key={idx}
+                                    className={`w-full p-3 rounded-lg break-words whitespace-pre-wrap overflow-wrap break-word ${
+                                        message.role === "user" ? "bg-gray-900 text-white mt-16" : "bg-purple-700 text-white"
+                                    }`}
+                                >
+                                    <p className="text-xl" title={message.role.toUpperCase()}> {message.content}</p>
+                                </div>
+                            ): (
+                                <CodeBlock inChat={true} code={message.content} inNotes={false} interactive={false}></CodeBlock>
+                            )
+
+
+                        })}
+                    </div>
+                )}
+
+                {isBotThinking && (
+                    <div className="bg-purple-700 w-full p-3 rounded-lg break-words whitespace-pre-wrap overflow-wrap break-word text-white">
+                        <p className="text-xl">Thinking...</p>
+                    </div>
+                )}
             </div>
 
-            {conversation && (<div ref={messageListRef}>
-                {conversation.messages.map((message) => (
+            <textarea
+                ref={textAreaRef}
+                maxLength={1000}
+                id="chatbot-ta"
+                value={userMessage}
+                disabled={isDisable}
+                placeholder="Ask me anything"
+                className="bg-gray-900 text-white rounded-md w-full h-[10vh] overflow-y-auto resize-none custom-scrollbar p-2 break-words whitespace-pre-wrap"
+                onChange={(e) => {
+                    setAIMessage("");
+                    setUserMessage(e.target.value);
+                }}
+            ></textarea>
 
-                    <div>
-                        <div className={"w-full h-auto p-2 border-lg relative rounded-lg mt-8 mb-8  " + (message.role == "user" ? "bg-gray-900":"bg-purple-700")}>
-                            <p className={"text-xl"}>{message.content}</p>
+            <div className="flex w-full gap-2 mt-2">
+                <button
+                    disabled={isDisable}
+                    className="w-full h-[5vh] bg-gray-900 hover:bg-gray-600 text-white rounded-md transition"
+                    onClick={() => {
+                        setAIMessage("");
+                        if (userMessage.trim() !== "") {
 
-                        </div>
-                        <CodeBlock code={"Code hehe"} inNotes={false} inChat={true}></CodeBlock>
-                        <CodeBlock code={"Code hehe"} inNotes={false} inChat={true}></CodeBlock>
-                    </div>
+                            addMessage(userMessage);
+                            setUserMessage("");
+                        }
+                    }}
+                >
+                    Enter
+                </button>
 
-                ))}
-            </div>)}
+                <button
+                    className="w-full h-[5vh] bg-red-800 hover:bg-red-900 text-white rounded-md transition"
+                    onClick={() => {
+                        if (!conversation) return;
+                        setConversation({ ...conversation, messages: [] });
+                    }}
+                >
+                    Clear Conversation
+                </button>
+            </div>
         </div>
-        <textarea ref={textAreaRef} maxLength={1000} id={"chatbot-ta"} value={userMessage} disabled={isDisable} className={"bg-gray-900 rounded-md w-full h-[10vh] overflow-y-auto resize-none custom-scrollbar p-2"} placeholder={"Ask me anything"}
-        onChange={(e) => setUserMessage(e.target.value)}></textarea>
-        <div  className={"flex w-full gap-2 "}>
-            <button disabled={isDisable} className={"w-full h-[5vh] bg-gray-900 hover:bg-gray-600 rounded-md transition"} onClick={() => {
-                if(userMessage.trim() != ""){
-                    addMessage(userMessage);
-                    setUserMessage("");
-                }
-
-            }}> Enter </button>
-            <button className={"w-full h-[5vh] bg-red-800 hover:bg-red-900 rounded-md transition"} onClick={() => {
-                if(!conversation) {return}
-                setConversation({ ...conversation, messages: [] });
-            }}> Clear Conversation </button>
-
-
-        </div>
-    </div>)
+    )
 }

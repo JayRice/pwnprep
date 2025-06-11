@@ -1,17 +1,13 @@
-import { useState , useEffect} from 'react';
+import {useState, useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import {ChevronUp, X} from 'lucide-react';
-import { TargetParams,CustomParam } from '../data/interfaces.ts';
+import { TargetParams,CustomParam} from '../data/interfaces.ts';
 import {ChevronDown} from "lucide-react"
 
 import {addCustomParam, deleteCustomParam,updateCustomParam, getCustomParams} from "../database/database.ts";
 
 import { toast, Toaster } from 'react-hot-toast';
 
-interface Props {
-  isOpen: boolean;
-  onClose: () => void;
-}
 
 interface TargetParamProps {
   paramKey: string;
@@ -35,7 +31,7 @@ function TargetParam({paramKey, localParams, setLocalParams } : TargetParamProps
         }
 
         }
-        className="text-black my-2 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+        className="group text-black my-2 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
         placeholder={`Enter ${paramKey} (e.g., [${paramKey}])`}
     />
   </div>)
@@ -46,39 +42,55 @@ interface CustomParamProps {
   customParam: CustomParam;
 }
 function CustomParams({customParam, setCustomParams, customParams } : CustomParamProps) {
-  return ( <div>
+  return ( <div className={"group"}>
     <label className="block text-sm font-medium text-gray-700">
       {customParam.name}
     </label>
-    <input
-        type="text"
+    <div className={"flex flex-row items-center gap-2"}>
+      <input
+          type="text"
 
-        key={customParam.id}
-        maxLength={1000}
-        value={customParam.value}
-        onChange={(e) => {
+          key={customParam.id}
+          maxLength={1000}
+          value={customParam.value}
+          onChange={(e) => {
 
-             updateCustomParam(customParam.id, {
+            updateCustomParam(customParam.id, {
               value: e.target.value,
             })
 
-           setCustomParams(customParams.map((custom) => {
-             if (custom.id == customParam.id){
-               return {...custom, value: e.target.value}
-             }
-             return custom;
-           }))
+            setCustomParams(customParams.map((custom) => {
+              if (custom.id == customParam.id){
+                return {...custom, value: e.target.value}
+              }
+              return custom;
+            }))
 
-        }
 
-        }
-        className="text-black my-2 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-        placeholder={`Enter ${customParam.name} (e.g., ${customParam.placeholder})`}
-    />
+
+          }
+
+          }
+          className="text-black my-2 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+          placeholder={`Enter ${customParam.name} (e.g., ${customParam.placeholder})`}
+      />
+      <button className={"group-hover:opacity-100 transition opacity-0 rounded-full bg-gray-200 hover:bg-gray-300 p-2"} onClick={() => {
+        setCustomParams(customParams.filter((cp) => cp.id !== customParam.id))
+        deleteCustomParam(customParam.id)
+      }}>
+        <X className=" text-black w-4 h-4"/>
+
+      </button>
+    </div>
+
   </div>)
 }
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
-export default function TargetParamsModal({ isOpen, onClose }: Props) {
+export default function TargetParamsModal({  isOpen, onClose  }: Props) {
 
 
 
@@ -97,9 +109,13 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
 
   const [customParams, setCustomParams] = useState<CustomParam[]>([]);
 
+  const setStoreCustomParams = useStore((state) => state.setCustomParams);
+
   const [advancedToggled, setAdvancedToggled] = useState(true);
 
   const [searchValue, setSearchValue] = useState<string>("");
+
+  const targetModalRef = useRef<HTMLDivElement>(null);
 
 
   const targetParamKeys = Object.keys(localParams).filter(key => key !== 'id');
@@ -110,9 +126,25 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
      })
   }, [])
 
-  // useEffect(() => {
-  //   if (customParams) setCustomParams(customParams)
-  // }, [customParams])
+  useEffect(() => {
+    if (customParams) {
+      setStoreCustomParams(customParams);
+    }
+  }, [customParams]);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      console.log("click")
+      if (
+          targetModalRef.current &&
+          !targetModalRef.current.contains(e.target as Node)
+      ) {
+       onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  });
 
   if (!isOpen) return null;
 
@@ -121,14 +153,15 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
 
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black bg-opacity-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1000] bg-black bg-opacity-50 flex items-center justify-center p-4 w-full h-full"
+         >
       <Toaster position={"bottom-right"} />
 
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md h-[60vh] overflow-y-auto">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Parameters</h2>
-          <button
-            onClick={onClose}
+      <div ref={targetModalRef}  className="bg-white rounded-lg shadow-xl w-full max-w-md h-[60vh] overflow-y-auto">
+        <div  className="flex justify-between items-center p-6 border-b">
+          <h2  className="text-xl font-semibold text-gray-900">Parameters</h2>
+          <button onClick={onClose}
+
             className="text-gray-400 hover:text-gray-500 left-4 "
           >
             <X className="h-6 w-6" />
@@ -142,7 +175,8 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
           <div className={"mb-8"}>
             { searchValue == "" && <p className="text-lg font-semibold text-gray-900 mb-4">Custom Parameters</p>}
             {customParams.map((cp) => {
-              if (cp.name.includes(searchValue) || cp.placeholder.includes(searchValue)) {
+              if (cp.name.toLowerCase().includes(searchValue.toLowerCase()) || cp.placeholder.toLowerCase().includes(searchValue.toLowerCase())
+                  || cp.value.toLowerCase().includes(searchValue.toLowerCase())) {
                 return ( <CustomParams  customParams={customParams} setCustomParams={setCustomParams} customParam={cp}></CustomParams>)
 
               }
@@ -184,6 +218,22 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
                       className="text-black mt-1 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
 
                   />
+                  <label className="block text-md font-medium text-gray-700">
+                    Starting Value
+                  </label>
+                  <input
+                      maxLength={100}
+
+                      type="text"
+                      value={newCustomParamValue.value}
+                      onChange={(e) => {setNewCustomParamValue((prev) => {
+                        return {...prev,  value: e.target.value}
+                      })}}
+                      placeholder={"eg. 10.10.10.10 "}
+
+                      className="text-black mt-1 block w-full rounded-md p-2 border-gray-200 border-2 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+
+                  />
 
                 </form>
             }
@@ -196,7 +246,6 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
                 if (customParams.find((cp) => cp.name == newCustomParamValue.name)){
                   return toast("That Custom Parameter Already Exists")
                 }
-                console.log("Custom: ",newCustomParamValue)
                 setCustomParams([...customParams, newCustomParamValue ])
                 addCustomParam(newCustomParamValue)
                 setNewCustomParamValue({
@@ -216,7 +265,7 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
 
           </div>
           {targetParamKeys.slice(0, searchValue == ""? 10:targetParamKeys.length).map((key) => {
-            if (key.includes(searchValue)){
+            if (key.toLowerCase().includes(searchValue.toLowerCase())){
               return <TargetParam paramKey={key} localParams={localParams} setLocalParams={setLocalParams}/>
 
             }
@@ -228,7 +277,7 @@ export default function TargetParamsModal({ isOpen, onClose }: Props) {
             { advancedToggled ? <ChevronDown className={"w-4 h-4"}/> : <ChevronUp className={"w-4 h-4"}/> }
           </button>}
           { (!advancedToggled && searchValue=="") &&  targetParamKeys.slice(10).map((key) => {
-            if (key.includes(searchValue)) {
+            if (key.toLowerCase().includes(searchValue.toLowerCase())) {
               return <TargetParam paramKey={key} localParams={localParams} setLocalParams={setLocalParams}/>
             }
 

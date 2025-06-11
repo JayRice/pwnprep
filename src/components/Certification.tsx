@@ -1,16 +1,12 @@
 import {useEffect, useRef, useState} from 'react';
-import { useParams, Link, useNavigate  } from 'react-router-dom';
+import { useParams, Link  } from 'react-router-dom';
 
-import { useStore } from '../store/useStore';
 import CodeBlock from './CodeBlock';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 import {getPremiumContent, isPremium} from "../database/database.ts";
 
-import {replaceParams} from "../regex/regex.ts"
-
-import { Lock } from 'lucide-react';
-
+import {useStore} from "../store/useStore.ts"
 
 
 interface Section {
@@ -39,29 +35,30 @@ export default function CertificationPage() {
 
     const { targetParams } = useStore();
 
-    const navigate = useNavigate();
+
 
     const [sectionIndex, setSectionIndex] = useState(0);
 
     const [cert, setCert] = useState<Certification | null>(null);
 
-    const [premium, setPremium] = useState(false);
+    const premium = useStore((state) => state.isPremium);
 
     const message = useRef("Loading...")
 
 
 
     useEffect(() => {
-        isPremium().then((result) => {
-            setPremium(result);
-        })
-        console.log(certId, sectionId);
+
+        if(!certId || !sectionId){
+            return;
+        }
         getPremiumContent({certId:certId, sectionId: sectionId}).then((result) => {
 
             setCert(result);
 
         }).catch((err) => {
-            navigate("/premium")
+            return toast("You have to be premium to access this feature!")
+
             message.current = err.message;
         })
     }, [certId, sectionId]);
@@ -119,13 +116,13 @@ export default function CertificationPage() {
 
         if(!section.commands) {return (<div></div>)}
 
-        return (section.commands.map((data, i) => {
+        return (section.commands.map((data) => {
             const rawCode = data[0];
             const explanation = data[1];
             return( <div>
                 <p className="text-gray-700 text-2xl mb-4 mt-10 font-bold">{explanation}</p>
 
-                <CodeBlock key={i} code={replaceParams(targetParams, rawCode)} interactive={true} />
+                <CodeBlock key={`${cert.section.id}-${rawCode.slice(0, 10)}`} code={rawCode} inNotes={false} interactive={true} />
 
 
             </div>)
@@ -163,7 +160,6 @@ export default function CertificationPage() {
 
                                             setSectionIndex(index);
                                             console.log(index)
-                                            navigate(`/tests/${cert.id}/${section.id}`, {replace: true})
                                         }}
                                         className={`block px-4 py-2 rounded-md grow-1 ${
                                             currentSection.id === section.id

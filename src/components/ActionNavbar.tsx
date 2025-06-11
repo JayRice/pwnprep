@@ -1,7 +1,7 @@
 import  { useState, useEffect, useRef } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
 import { commonPorts } from '../data/ports';
-import {ClipboardEdit, HdmiPort, Wrench, Bot, Settings, ChevronRightCircle, ChevronLeftCircle} from 'lucide-react';
+import {ClipboardEdit, HdmiPort, Wrench, Bot, Settings} from 'lucide-react';
 import ChatBot from "./ChatBot.tsx"
 import {Conversation} from "../data/interfaces.ts";
 import TargetParamsModal from "./TargetParamsModal.tsx";
@@ -9,6 +9,7 @@ import TargetParamsModal from "./TargetParamsModal.tsx";
 
 
 import ToggleButton from "./ToggleButton.tsx";
+import {useStore} from "../store/useStore.ts";
 
 
 const topics = [
@@ -31,7 +32,10 @@ interface  Props{
     setIsToggled: (toggled: boolean) => void;
 }
 export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalOpen, isToggled, setIsToggled} : Props) {
-    const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+    const AIMessage = useStore((state) => state.AIMessage)
+    console.log("Action navbar being reloaded: ", AIMessage)
+
+    const [openSections, setOpenSections] = useState<Record<string, boolean>>({ai: AIMessage!=""});
     const dropdownRefPorts = useRef<HTMLDivElement>(null);
     const dropdownRefTools = useRef<HTMLDivElement>(null);
     const dropdownRefAI = useRef<HTMLDivElement>(null);
@@ -41,7 +45,14 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
 
 
 
+
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (AIMessage !== "") {
+            setOpenSections((prev) => ({ ...prev, ai: true }));
+        }
+    }, [AIMessage]);
 
     const toggleSection = (section: string) => {
         setOpenSections(prev => ({
@@ -63,6 +74,8 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [openSections['ports']]);
+
+
 
     // close tools dropdown on outside click
     useEffect(() => {
@@ -111,7 +124,7 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                         </button>
 
                          {openSections['ai'] && (
-                             <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50">
+                             <div className="absolute left-8 top-4 mt-2  w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50">
                                 <ChatBot user={user} isPremium={true}  conversation={conversation}  setConversation={setConversation}></ChatBot>
                              </div>
                          )}
@@ -191,7 +204,9 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                     <div className={"flex flex-col gap-3 mt-auto mb-2"}>
                         <div className="">
                             <button
-                                onClick={() => setIsParamsModalOpen(true)}
+                                onClick={() => {
+                                    setIsParamsModalOpen(true)
+                                }}
                                 className="bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition "
                             >
                                 <Settings className="h-6 w-6" />
@@ -200,6 +215,7 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                                 isOpen={isParamsModalOpen}
                                 onClose={() => setIsParamsModalOpen(false)}
                             />
+
                         </div>
                     </div>
 
