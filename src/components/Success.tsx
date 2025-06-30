@@ -2,6 +2,9 @@ import { auth } from "../database/firebase.ts";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
+import LoadingSpinner from "./LoadingSpinner.tsx";
+import {useStore} from "../store/useStore.ts";
+
 export default function Success() {
     const navigate = useNavigate();
 
@@ -11,6 +14,9 @@ export default function Success() {
         return token?.claims?.premium === true;
     }
 
+    const setPremium = useStore((store) => store.setIsPremium);
+
+
     useEffect(() => {
         const waitForPremium = async () => {
             const maxTries = 10;
@@ -19,6 +25,7 @@ export default function Success() {
             while (tries < maxTries) {
                 const isPremium = await checkPremium();
                 if (isPremium) {
+                    setPremium(true);
                     navigate("/");
                     return;
                 }
@@ -26,16 +33,16 @@ export default function Success() {
                 tries++;
             }
 
-            console.warn("❌ Premium claim not found after waiting.");
-            navigate("/"); // fallback redirect even if claim doesn't show up
+            navigate("/");
         };
 
         waitForPremium();
     }, []);
 
     return (
-        <div className={"flex justify-center items-center"}>
-            Premium activated! Reloading your instance, hold on...
+        <div className={"flex justify-center flex-col gap-16 items-center relative mt-32"}>
+            <h1 className={"text-xl font-bold"}>Premium activated! Reloading your instance, hold on...</h1>
+            <LoadingSpinner  spinnerClassName={"bg-purple-600"}></LoadingSpinner>
         </div>
     );
 }

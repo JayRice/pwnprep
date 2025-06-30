@@ -1,5 +1,7 @@
 import  {useState, useRef, useEffect} from 'react';
 import {Plus, Trash , Check, Archive, ChevronDown, ChevronUp } from 'lucide-react';
+import {Toaster, toast} from "react-hot-toast"
+import LoadingSpinner from "./LoadingSpinner";
 
 
 
@@ -78,6 +80,11 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
     const [maxNoteCount, setMaxNoteCount] = useState(9);
 
 
+    const [isLabelsLoaded, setIsLabelsLoaded] = useState(!user);
+    const [isNotesLoaded, setIsNotesLoaded] = useState(!user);
+
+
+
 
 
 
@@ -118,7 +125,6 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
             }
             if (!expandedNote) {return}
 
-            console.log("Updating expanded note:", expandedNote);
 
             updateNote(expandedNote.id, {
 
@@ -153,6 +159,10 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
     useEffect(() => {
         getAllNotes().then((notes) => {
+            if (notes.length >= 1000){
+                 toast("You have too many notes. Delete some to add more.")
+            }
+            setIsNotesLoaded(true)
             setNotes(notes.reverse());
 
         }).catch((err) => {
@@ -160,6 +170,10 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
         })
 
         getAllLabels().then((labels) => {
+            if (labels.length >= 1000){
+                 toast("You have too many labels. Delete some to add more.")
+            }
+            setIsLabelsLoaded(true)
             setLabels(labels);
         }).catch((err) => {
             console.error(err);
@@ -167,19 +181,18 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
     }, [user])
 
     useEffect(() => {
-
+        if(!user){
+            toast("Login to save notes, and use parameter replacement in notes.")
+        }
         const handleClickOutside = (event: MouseEvent) => {
             if (modalRef.current && !modalRef.current.contains(event.target as Node) && !(menuRef.current && menuRef.current.contains(event.target as Node))) {
 
                 // if note is empty when closed then delete it
 
                 // get the first note in the list because whenever you click a note it moves it to the front
-                // if(notes.length < 0) {return}
-                // const lastExpandedNote = notes[0];
-                //
-                // if ( (lastExpandedNote.content.length == 1 && lastExpandedNote.content[0].content == "") ||  (lastExpandedNote.content.length == 0 && lastExpandedNote.title == "")){
-                //     permetatelyDeleteNote(lastExpandedNote.id);
-                // }
+                if(notes.length < 0) {return}
+
+
                 setExpandedNoteId(null);
 
             }
@@ -194,7 +207,6 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
 
     }, []);
-
 
 
 
@@ -231,7 +243,6 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
 
         const newContent = { ...originalContent, id: new Date().toISOString() };
-        console.log(newContent);
 
 
         const newContentList = [
@@ -247,6 +258,9 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
         ));
     }
     const addNote = () => {
+        if (notes.length >= 1000){
+            return toast("You have too many notes. Delete some to add more.")
+        }
         const newNote: Note = {
             id: Date.now().toString(),
             title: '',
@@ -262,6 +276,9 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
         addNoteToUser(newNote);
     };
     const addLabel = () => {
+        if (labels.length >= 1000){
+           return toast("You have too many labels. Delete some to add more.")
+        }
         if (newLabelName.trim()) {
             const newLabel: Label = {
                 id: Date.now().toString(),
@@ -323,7 +340,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
         const label = labels.find(label => label.id == id);
         if (!label) {return}
         DB_deleteLabel(label);
-        setLabels(labels.filter(label => label.id !== id));
+        setLabels((prev) => prev.filter(label => label.id !== id));
         setNotes((prev) => prev.map(note => ({
             ...note,
             labels: note.labels.filter(l => l !== id),
@@ -367,9 +384,9 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
 
 
-
         setTimeout(() => {
             if (expandedNoteId === id) {
+
                 setExpandedNoteId(null);
             }
         }, TIMEOUT_LENGTH)
@@ -462,6 +479,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
 
 
         <div ref={noteAreaRef} className="min-h-screen bg-gray-50 pt-28 p-6">
+            <Toaster position={"bottom-right"}></Toaster>
             <ToggleButton isToggled={labelsBarToggled} setIsToggled={setLabelsBarToggled} className={
                 handleToggleLogic("left-4", "left-64 ml-[-1rem]","left-16", "left-64 ml-[3rem]") + " z-[36]"
             }></ToggleButton>
@@ -474,6 +492,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                             return permetatelyDeleteManyNotes(selectedNotes);
                         }
                         changeStatusOfManyNotes(selectedNotes, "trash")
+                        setIsAllSelected(false)
 
                     }}>
                         <Trash className={"w-6 h-6"}></Trash>
@@ -481,7 +500,7 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                     <button title={"Archive All"} className={"text-white bg-gray-800 rounded-full p-2"}
                             onClick={() => {
                                 changeStatusOfManyNotes(selectedNotes, "archive")
-
+                                setIsAllSelected(false)
 
                             }}>
                         <Archive className={"w-6 h-6"}></Archive>
@@ -538,97 +557,100 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
             <div className={`fixed ${handleToggleLogic("left-[-16rem]", "left-0", "left-[-16rem]", "left-16")} top-28 w-64 h-[calc(100vh-7rem)] bg-white border-r border-gray-200 p-4 z-[35] position-add position-transition`}>
                 <div className="mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-2">Labels</h2>
-                    <div className="space-y-2">
+                    {isLabelsLoaded ?
                         <div className="space-y-2">
-                            {reorderedLabels.map(label => (
-                                <div
-                                    key={label.id}
-                                    className={`flex items-center justify-between group relative depth-${label.depth}`}
-                                >
-                                    {label.childLabels.length > 0 &&
-                                        <button onClick={() => {
-                                            if (collapsedLabels.includes(label.id)) {
-                                                return setCollapsedLabels(prev => prev.filter((labelId) => labelId !== label.id) )
-                                            }
-                                            setCollapsedLabels(prev => [...prev, label.id])
-                                        }}>
-                                            {!collapsedLabels.includes(label.id) ? <ChevronDown className="h-4 w-4 m-1"/>: <ChevronUp className="h-4 w-4 m-1"/>}
+                            <div className="space-y-2">
 
-                                        </button>
-                                    }
+                                {reorderedLabels.map(label => (
+                                    <div
+                                        key={label.id}
+                                        className={`flex items-center justify-between group relative depth-${label.depth}`}
+                                    >
+                                        {label.childLabels.length > 0 &&
+                                            <button onClick={() => {
+                                                if (collapsedLabels.includes(label.id)) {
+                                                    return setCollapsedLabels(prev => prev.filter((labelId) => labelId !== label.id) )
+                                                }
+                                                setCollapsedLabels(prev => [...prev, label.id])
+                                            }}>
+                                                {!collapsedLabels.includes(label.id) ? <ChevronDown className="h-4 w-4 m-1"/>: <ChevronUp className="h-4 w-4 m-1"/>}
 
-                                    <button
-                                        onClick={() => setSelectedLabels(prev => {
-                                            // Just use this function to get all labels so you can select or unselect them all
-                                            reorderedLabelsRef.current = []
-                                            recursivelyOrderLabels([label.id],label.depth)
-                                            if(prev.includes(label.id)){
-                                                return prev.filter(l => l !== label.id && !reorderedLabelsRef.current.includes(l))
-                                            }else{
-                                                return [...prev, ...[label.id, ...reorderedLabelsRef.current]]
-
-                                            }
+                                            </button>
                                         }
 
-                                        )}
-                                        className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
-                                            selectedLabels.includes(label.id)
-                                                ? 'bg-purple-100 text-purple-700'
-                                                : 'hover:bg-gray-100'
-                                        }`}
-                                    >
-
-                                        {label.name}
-                                    </button>
-                                    {newChildLabelId != label.id &&
-                                        <div className={"flex flex-row gap-2"}>
-                                            {label.depth <= 3 &&
-                                                <button
-                                                    onClick={() => setNewChildLabelId(label.id)}
-                                                    className="hidden group-hover:block p-2 text-gray-400 hover:text-purple-500"
-                                                >
-                                                    <Plus className="h-4 w-4" />
-                                                </button>
-                                            }
-                                            <button
-                                                onClick={() => {
+                                        <button
+                                            onClick={() => setSelectedLabels(prev => {
+                                                    // Just use this function to get all labels so you can select or unselect them all
                                                     reorderedLabelsRef.current = []
                                                     recursivelyOrderLabels([label.id],label.depth)
-                                                    for (const childIds of reorderedLabelsRef.current){
-                                                        deleteLabel(childIds)
+                                                    if(prev.includes(label.id)){
+                                                        return prev.filter(l => l !== label.id && !reorderedLabelsRef.current.includes(l))
+                                                    }else{
+                                                        return [...prev, ...[label.id, ...reorderedLabelsRef.current]]
+
                                                     }
-                                                    setCollapsedLabels((prev) => prev.filter((labelId) => labelId !== label.id))
+                                                }
 
-                                                    // delete from the list of the parent label
-                                                    if (label.parentLabel){
-                                                        setLabels((prev) =>
-                                                            prev.map((lx) => {
-                                                                if (lx.id === label.parentLabel) {
-                                                                    const updated = {
-                                                                        ...lx,
-                                                                        childLabels: lx.childLabels.filter((lyId) => lyId !== label.id),
-                                                                    };
-                                                                    return updated;
-                                                                }
-                                                                return lx;
-                                                            })
-                                                        );
-                                                    }
+                                            )}
+                                            className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
+                                                selectedLabels.includes(label.id)
+                                                    ? 'bg-purple-100 text-purple-700'
+                                                    : 'hover:bg-gray-100'
+                                            }`}
+                                        >
 
-                                                    deleteLabel(label.id)
+                                            {label.name}
+                                        </button>
+                                        {newChildLabelId != label.id &&
+                                            <div className={"flex flex-row gap-2"}>
+                                                {label.depth <= 3 &&
+                                                    <button
+                                                        onClick={() => setNewChildLabelId(label.id)}
+                                                        className="hidden group-hover:block p-2 text-gray-400 hover:text-purple-500"
+                                                    >
+                                                        <Plus className="h-4 w-4" />
+                                                    </button>
+                                                }
+                                                <button
+                                                    onClick={() => {
+                                                        reorderedLabelsRef.current = []
+                                                        recursivelyOrderLabels([label.id],label.depth)
+                                                        for (const childId of reorderedLabelsRef.current){
 
-                                                }}
-                                                className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
-                                            >
-                                                <Trash className="h-4 w-4" />
-                                            </button>
+                                                            deleteLabel(childId)
+                                                        }
+                                                        setCollapsedLabels((prev) => prev.filter((labelId) => labelId !== label.id))
+
+                                                        // delete from the list of the parent label
+                                                        if (label.parentLabel){
+                                                            setLabels((prev) =>
+                                                                prev.map((lx) => {
+                                                                    if (lx.id === label.parentLabel) {
+                                                                        const updated = {
+                                                                            ...lx,
+                                                                            childLabels: lx.childLabels.filter((lyId) => lyId !== label.id),
+                                                                        };
+                                                                        return updated;
+                                                                    }
+                                                                    return lx;
+                                                                })
+                                                            );
+                                                        }
+
+                                                        deleteLabel(label.id)
+
+                                                    }}
+                                                    className="hidden group-hover:block p-2 text-gray-400 hover:text-red-500"
+                                                >
+                                                    <Trash className="h-4 w-4" />
+                                                </button>
 
 
-                                        </div>
-                                    }
+                                            </div>
+                                        }
 
 
-                                    {newChildLabelId == label.id && (
+                                        {newChildLabelId == label.id && (
                                             <div className="ml-2  left-14">
                                                 <input
                                                     type="text"
@@ -645,75 +667,78 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                                             </div>
                                         )}
 
+                                    </div>
+                                ))}
+                            </div>
+                            {isAddingLabel ? (
+                                <div className="mt-2">
+                                    <input
+                                        type="text"
+                                        value={newLabelName}
+                                        onChange={(e) => setNewLabelName(e.target.value)}
+                                        placeholder="Enter label name"
+                                        className="w-full px-3 py-2 border rounded-md"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') addLabel();
+                                            if (e.key === 'Escape') setIsAddingLabel(false);
+                                        }}
+                                        autoFocus
+                                    />
                                 </div>
-                            ))}
-                        </div>
-                        {isAddingLabel ? (
-                            <div className="mt-2">
-                                <input
-                                    type="text"
-                                    value={newLabelName}
-                                    onChange={(e) => setNewLabelName(e.target.value)}
-                                    placeholder="Enter label name"
-                                    className="w-full px-3 py-2 border rounded-md"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') addLabel();
-                                        if (e.key === 'Escape') setIsAddingLabel(false);
-                                    }}
-                                    autoFocus
-                                />
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setIsAddingLabel(true)}
-                                className="mt-2 flex items-center text-sm text-purple-600 hover:text-purple-700"
-                            >
-                                <Plus className="h-6 w-6 mr-1" />
-                                Add Label
-                            </button>
-                        )}
-                        <div className="space-y-2">
-                            <div
-                                key={"Trash"}
-                                className="flex items-center justify-between group"
-
-                            >
-                                <Trash className="h-4 w-4 m-1"/>
+                            ) : (
                                 <button
-                                    onClick={ () => handleAreaButton("trash") }
-                                    className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
-                                        selectedArea == "trash"
-                                            ? 'bg-purple-100 text-purple-700'
-                                            : 'hover:bg-gray-100'
-                                    }`}
+                                    onClick={() => setIsAddingLabel(true)}
+                                    className="mt-2 flex items-center text-sm text-purple-600 hover:text-purple-700"
                                 >
-
-                                    Trash
+                                    <Plus className="h-6 w-6 mr-1" />
+                                    Add Label
                                 </button>
+                            )}
+                            <div className="space-y-2">
+                                <div
+                                    key={"Trash"}
+                                    className="flex items-center justify-between group"
 
-                            </div>
-                            <div
-                                key={"Archive"}
-                                className="flex items-center justify-between group"
-
-                            >
-                                <Archive className="h-4 w-4 m-1"/>
-                                <button
-                                    onClick={ () => handleAreaButton("archive") }
-                                    className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
-                                        selectedArea == "archive"
-                                            ? 'bg-purple-100 text-purple-700'
-                                            : 'hover:bg-gray-100'
-                                    }`}
                                 >
+                                    <Trash className="h-4 w-4 m-1"/>
+                                    <button
+                                        onClick={ () => handleAreaButton("trash") }
+                                        className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
+                                            selectedArea == "trash"
+                                                ? 'bg-purple-100 text-purple-700'
+                                                : 'hover:bg-gray-100'
+                                        }`}
+                                    >
 
-                                    Archive
-                                </button>
+                                        Trash
+                                    </button>
 
+                                </div>
+                                <div
+                                    key={"Archive"}
+                                    className="flex items-center justify-between group"
+
+                                >
+                                    <Archive className="h-4 w-4 m-1"/>
+                                    <button
+                                        onClick={ () => handleAreaButton("archive") }
+                                        className={`flex-1 text-left px-3 py-2 rounded-md text-sm ${
+                                            selectedArea == "archive"
+                                                ? 'bg-purple-100 text-purple-700'
+                                                : 'hover:bg-gray-100'
+                                        }`}
+                                    >
+
+                                        Archive
+                                    </button>
+
+                                </div>
                             </div>
-                        </div>
 
-                    </div>
+                        </div>:
+                        <LoadingSpinner parentClassName={"mt-8"} spinnerClassName={"border-purple-600"}/>
+                    }
+
 
                 </div>
             </div>
@@ -735,101 +760,105 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
                 >
                     <Plus className="h-6 w-6" />
                 </button>
+                {isNotesLoaded ? <div>
+                    <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  ">
+                        {filteredNotes.slice(0, maxNoteCount).map(note => (
+                            <div className={"relative group bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow hover:border-gray-400 "}
+                                 onMouseEnter={() => setIsHovered(note.id)}
+                                 onMouseLeave={() => setIsHovered(null)}>
+                                { ((isHovered == note.id) || (selectedNotes.indexOf(note.id) !== -1)) && (
+                                    <div className={"absolute  top-[-3%] left-[-3%]  rounded-full  border-purple-800  border-2 p-2 opacity-100 hover:bg-purple-800 hover:text-white transition-opacity "
+                                        + (selectedNotes.indexOf(note.id) !== -1 ?"bg-purple-800 text-white ":"") }
+                                         onClick={ () => {
+                                             if(selectedNotes.indexOf(note.id) !== -1) {
+                                                 return setSelectedNotes(prev => prev.filter(id => id !== note.id));
 
-                <div  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4  ">
-                    {filteredNotes.slice(0, maxNoteCount).map(note => (
-                        <div className={"relative group bg-white rounded-lg shadow-sm border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow hover:border-gray-400 "}
-                             onMouseEnter={() => setIsHovered(note.id)}
-                             onMouseLeave={() => setIsHovered(null)}>
-                            { ((isHovered == note.id) || (selectedNotes.indexOf(note.id) !== -1)) && (
-                                <div className={"absolute  top-[-3%] left-[-3%]  rounded-full  border-purple-400 border-2 p-2 opacity-100 hover:bg-purple-400 transition-opacity "
-                                    + (selectedNotes.indexOf(note.id) !== -1 ?"bg-purple-400 ":"") }
-                                     onClick={ () => {
-                                         if(selectedNotes.indexOf(note.id) !== -1) {
-                                             return setSelectedNotes(prev => prev.filter(id => id !== note.id));
+                                             }
+                                             setSelectedNotes(prev => [...prev, note.id]
 
-                                         }
-                                         setSelectedNotes(prev => [...prev, note.id]
+                                             )}}
 
-                                         )}}
+                                    >
 
-                                >
+                                        <Check className={"w-4 h-4 "}></Check>
 
-                                    <Check className={"w-4 h-4 "}></Check>
-
-                                </div>
-                            )}
-                            <div
-                                key={note.id}
-                                onClick={ () => {
-                                    handleNoteClick(note.id)
-                                    setIsHovered(null)
-                                }}
-
-                                className={"z-25 " + (selectedNotes.indexOf(note.id) !== -1 ?"border-purple-400 ":"")}
-                            >
-
-
-
-                                <input
-                                    type="text"
-                                    value={notes.find((n) => n.id == note.id)?.title}
-                                    onChange={(e) => setNotes(notes.map((n) => {
-                                        if(n.id == note.id){
-                                            editedNotes.push(n.id)
-                                            return {...n, title: e.target.value};
-                                        }
-                                        return n;
-                                    }))}
-
-                                    placeholder="Title"
-                                    className="w-full font-medium focus:outline-none text-[1.5rem] "
-                                    onClick={(e) => e.stopPropagation()}
-                                />
-                                <div className="text-gray-600 min-h-[20rem] max-h-[20rem] whitespace-pre-line overflow-y-hidden">
-                                    {note.content.map((cont, i) =>
-                                        cont.type === "text" ? (
-                                            <div className={"mb-4"}>
-                                                <p key={i} >{cont.content == "" ? "Take a note...": cont.content}</p>
-                                            </div>
-
-                                        ) : (
-                                            <div className={"bg-gray-900 text-gray-100 p-4 rounded-md mb-4"}>
-                                                <p key={i}>{cont.content == "" ? "Change Code Here!" : cont.content}</p>
-                                            </div>
-                                        )
-                                    )}
-                                </div>
-
-                                {note.labels.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        {note.labels.map(labelId => {
-                                            const label = labels.find(l => l.id === labelId);
-                                            return label ? (
-                                                <span
-                                                    key={labelId}
-                                                    className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full"
-                                                >
-                        {label.name}
-                      </span>
-                                            ) : null;
-                                        })}
                                     </div>
                                 )}
+                                <div
+                                    key={note.id}
+                                    onClick={ () => {
+                                        handleNoteClick(note.id)
+                                        setIsHovered(null)
+                                    }}
+
+                                    className={"z-25 " + (selectedNotes.indexOf(note.id) !== -1 ?"border-purple-400 ":"")}
+                                >
 
 
+
+                                    <input
+                                        type="text"
+                                        value={notes.find((n) => n.id == note.id)?.title}
+                                        onChange={(e) => setNotes(notes.map((n) => {
+                                            if(n.id == note.id){
+                                                editedNotes.push(n.id)
+                                                return {...n, title: e.target.value};
+                                            }
+                                            return n;
+                                        }))}
+
+                                        placeholder="Title"
+                                        className="w-full font-medium focus:outline-none text-[1.5rem] "
+                                        onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className="text-gray-600 min-h-[20rem] max-h-[20rem] whitespace-pre-line overflow-y-hidden">
+                                        {note.content.map((cont, i) =>
+                                            cont.type === "text" ? (
+                                                <div className={"mb-4"}>
+                                                    <p key={i} >{cont.content == "" ? "Take a note...": cont.content}</p>
+                                                </div>
+
+                                            ) : (
+                                                <div className={"bg-gray-900 text-gray-100 p-4 rounded-md mb-4"}>
+                                                    <p key={i}>{cont.content == "" ? "Change Code Here!" : cont.content}</p>
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+
+                                    {note.labels.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {note.labels.map(labelId => {
+                                                const label = labels.find(l => l.id === labelId);
+                                                return label ? (
+                                                    <span
+                                                        key={labelId}
+                                                        className="px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded-full"
+                                                    >
+                        {label.name}
+                      </span>
+                                                ) : null;
+                                            })}
+                                        </div>
+                                    )}
+
+
+                                </div>
                             </div>
-                        </div>
 
-                    ))}
-                </div>
-                {!(maxNoteCount >= filteredNotes.length) && <div className={"w-full h-16 flex items-center justify-center mt-4 font-light cursor-pointer hover:bg-gray-100"}>
-                    <a onClick={(e) => {
+                        ))}
+                    </div>
+                    {!(maxNoteCount >= filteredNotes.length) && <div onClick={(e) => {
                         e.preventDefault();
 
                         setMaxNoteCount((prev) => prev+9)
-                    }}> See more Notes </a>
-                </div>}
+                    }} className={"w-full h-16 flex items-center justify-center mt-4 font-light cursor-pointer hover:bg-gray-100"}>
+                        <a> See more Notes </a>
+                    </div>}
+                </div>:<LoadingSpinner parentClassName={"items-center w-full h-full"} spinnerClassName={"border-purple-600"}/>
+                }
+
+
             </div>
 
             {/* Expanded note modal */}

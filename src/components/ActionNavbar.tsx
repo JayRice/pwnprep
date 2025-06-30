@@ -1,7 +1,6 @@
 import  { useState, useEffect, useRef } from 'react';
-import { Link , useNavigate} from 'react-router-dom';
-import { commonPorts } from '../data/ports';
-import {ClipboardEdit, HdmiPort, Wrench, Bot, Settings} from 'lucide-react';
+import { useNavigate} from 'react-router-dom';
+import {ClipboardEdit, Bot, Settings} from 'lucide-react';
 import ChatBot from "./ChatBot.tsx"
 import {Conversation} from "../data/interfaces.ts";
 import TargetParamsModal from "./TargetParamsModal.tsx";
@@ -12,17 +11,6 @@ import ToggleButton from "./ToggleButton.tsx";
 import {useStore} from "../store/useStore.ts";
 
 
-const topics = [
-    { name: 'NMAP', path: '/tools/nmap' },
-    { name: 'PYTHON', path: '/tools/python' },
-    { name: 'JAVA', path: '/tools/java' },
-    { name: 'PHP', path: '/tools/php' },
-    { name: 'PRIVESC', path: '/tools/privesc' },
-    { name: 'SHELLS', path: '/tools/shells' },
-    { name: 'PERSISTENCE', path: '/tools/persistence' },
-    { name: 'OSINT', path: '/tools/osint' },
-    { name: 'XSS', path: '/tools/xss' }
-];
 
 interface  Props{
     user: import('firebase/auth').User | null;
@@ -33,7 +21,6 @@ interface  Props{
 }
 export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalOpen, isToggled, setIsToggled} : Props) {
     const AIMessage = useStore((state) => state.AIMessage)
-    console.log("Action navbar being reloaded: ", AIMessage)
 
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({ai: AIMessage!=""});
     const dropdownRefPorts = useRef<HTMLDivElement>(null);
@@ -124,8 +111,8 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
                         </button>
 
                          {openSections['ai'] && (
-                             <div className="absolute left-8 top-4 mt-2  w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50">
-                                <ChatBot user={user} isPremium={true}  conversation={conversation}  setConversation={setConversation}></ChatBot>
+                             <div className="absolute left-16 top-4 mt-2  w-96 bg-gray-800 rounded-md shadow-lg py-2 z-50">
+                                <ChatBot user={user}  conversation={conversation}  setConversation={setConversation}></ChatBot>
                              </div>
                          )}
 
@@ -145,61 +132,61 @@ export default function ActionNavbar({user, setIsParamsModalOpen, isParamsModalO
 
                     </div>
 
-                    {/* Ports Dropdown */}
-                    <div className="relative group" ref={dropdownRefPorts}>
-                        <button
-                            onClick={() => toggleSection('ports')}
-                            className="flex items-center  h-full w-full p-2  text-white  space-x-1 text-sm hover:bg-purple-600 transition-colors
-                            bg-purple-500 rounded-full"
-                        >
-                            <HdmiPort className="h-8 w-8" />
-                        </button>
+                    {/*/!* Ports Dropdown *!/*/}
+                    {/*<div className="relative group" ref={dropdownRefPorts}>*/}
+                    {/*    <button*/}
+                    {/*        onClick={() => toggleSection('ports')}*/}
+                    {/*        className="flex items-center  h-full w-full p-2  text-white  space-x-1 text-sm hover:bg-purple-600 transition-colors*/}
+                    {/*        bg-purple-500 rounded-full"*/}
+                    {/*    >*/}
+                    {/*        <HdmiPort className="h-8 w-8" />*/}
+                    {/*    </button>*/}
 
-                        {openSections['ports'] && (
-                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-[51] overflow-y-auto max-h-64">
-                                <div className="grid grid-cols-2 gap-2 p-3">
-                                    {commonPorts.map(port => (
-                                        <Link
-                                            key={port.port}
-                                            to={`/ports/${port.port}`}
-                                            className="block px-3 py-2 hover:bg-gray-700 rounded transition-colors"
-                                        >
-                                            <div className="text-lg font-mono text-purple-400">{port.port}</div>
-                                            <div className="text-sm text-gray-300">{port.service}</div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {/*    {openSections['ports'] && (*/}
+                    {/*        <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2 z-[51] overflow-y-auto max-h-64">*/}
+                    {/*            <div className="grid grid-cols-2 gap-2 p-3">*/}
+                    {/*                {commonPorts.map(port => (*/}
+                    {/*                    <Link*/}
+                    {/*                        key={port.port}*/}
+                    {/*                        to={`/ports/${port.port}`}*/}
+                    {/*                        className="block px-3 py-2 hover:bg-gray-700 rounded transition-colors"*/}
+                    {/*                    >*/}
+                    {/*                        <div className="text-lg font-mono text-purple-400">{port.port}</div>*/}
+                    {/*                        <div className="text-sm text-gray-300">{port.service}</div>*/}
+                    {/*                    </Link>*/}
+                    {/*                ))}*/}
+                    {/*            </div>*/}
+                    {/*        </div>*/}
+                    {/*    )}*/}
+                    {/*</div>*/}
 
                     {/* Tools Dropdown */}
-                    <div className="relative group" ref={dropdownRefTools}>
-                        <button
-                            onClick={() => toggleSection('tools')}
-                            className="flex items-center  h-full w-full p-2  text-white  space-x-1  text-sm hover:bg-purple-600 transition-colors
-                            bg-purple-500 rounded-full "
-                        >
+                    {/*<div className="relative group" ref={dropdownRefTools}>*/}
+                    {/*    <button*/}
+                    {/*        onClick={() => toggleSection('tools')}*/}
+                    {/*        className="flex items-center  h-full w-full p-2  text-white  space-x-1  text-sm hover:bg-purple-600 transition-colors*/}
+                    {/*        bg-purple-500 rounded-full "*/}
+                    {/*    >*/}
 
-                            <Wrench className="h-8 w-8" />
-                        </button>
+                    {/*        <Wrench className="h-8 w-8" />*/}
+                    {/*    </button>*/}
 
-                        {openSections['tools'] && (
-                            <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2  overflow-y-auto max-h-64 z-[51]">
-                                <div className="grid grid-cols-2 gap-2 p-3">
-                                    {topics.map(topic => (
-                                        <Link
-                                            key={topic.path}
-                                            to={topic.path}
-                                            className="px-3 py-2 text-sm hover:bg-gray-700 rounded transition-colors"
-                                        >
-                                            {topic.name}
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {/*    {openSections['tools'] && (*/}
+                    {/*        <div className="absolute left-8 mt-2 w-96 bg-gray-800 rounded-md shadow-lg py-2  overflow-y-auto max-h-64 z-[51]">*/}
+                    {/*            <div className="grid grid-cols-2 gap-2 p-3">*/}
+                    {/*                {topics.map(topic => (*/}
+                    {/*                    <Link*/}
+                    {/*                        key={topic.path}*/}
+                    {/*                        to={topic.path}*/}
+                    {/*                        className="px-3 py-2 text-sm hover:bg-gray-700 rounded transition-colors"*/}
+                    {/*                    >*/}
+                    {/*                        {topic.name}*/}
+                    {/*                    </Link>*/}
+                    {/*                ))}*/}
+                    {/*            </div>*/}
+                    {/*        </div>*/}
+                    {/*    )}*/}
+                    {/*</div>*/}
 
                     <div className={"flex flex-col gap-3 mt-auto mb-2"}>
                         <div className="">

@@ -2,7 +2,7 @@ import React, {useRef, useEffect} from 'react';
 import { Copy, Check, Sparkles  } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { replaceParams, revertParams } from "../regex/regex.ts"
+import { replaceParams } from "../regex/regex.ts"
 import {useStore} from "../store/useStore.ts";
 
 
@@ -24,7 +24,7 @@ interface CodeBlockProps {
   closeParent?: () => void;
 }
 
-export default function CodeBlock({ code, inChat = false, language = 'bash', interactive=false, inNotes=false, className="", id="", refactoredCode="",
+export default function CodeBlock({ code, inChat = false, language = 'bash', inNotes=false, className="", id="",
                                       updateCodeContent=() => console.log("Update CB Failed! No function."),
                                       onContextMenu=() => console.log("ContextMenu Failed! No function."),
                                       closeParent=() : void => {}
@@ -54,7 +54,6 @@ export default function CodeBlock({ code, inChat = false, language = 'bash', int
   }, [])
   useEffect(() => {
 
-      console.log("Changed: ", code);
       replaceParams(code).then((changedCode) => {
         setChangingCode(changedCode);
 
@@ -98,30 +97,19 @@ export default function CodeBlock({ code, inChat = false, language = 'bash', int
     <div key={id} className={classNames} onContextMenu={onContextMenu}   >
       <pre className={`language-${language} bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto`}>
         <code>
-            {(interactive && inNotes) &&
-                (<textarea
-                    value={changingCode}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    className={"bg-gray-900 text-gray-100 w-full"} maxLength={1000}
 
-                    onChange={handleCodeChange} placeholder={"Change Code here!"}></textarea>)
-            }
-            {(interactive && !inNotes) &&
-                (<textarea
-                    value={changingCode}
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
-                    className={"bg-gray-900 text-gray-100 w-full"} maxLength={1000}
-                    onChange={handleCodeChange}
-                    ></textarea>)
-            }
+            <textarea
+                value={changingCode}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                className={"bg-gray-900 text-gray-100 w-full"} maxLength={1000}
 
-            {(!interactive) && code}
+                onChange={handleCodeChange} placeholder={"Change Code here!"}></textarea>
+
+
+
 
 
         </code>
@@ -166,7 +154,7 @@ export default function CodeBlock({ code, inChat = false, language = 'bash', int
                 closeParent()
               }
             }
-          }} className={"absolute top-16 w-full h-16 rounded-md p-2 bg-gray-600 text-gray-300"}>
+          }} className={"z-[1000] absolute top-16 w-full h-16 rounded-md p-2 bg-gray-600 text-gray-300"}>
             <input className={"w-full h-full rounded-md bg-gray-800"} value={AIMessage} onChange={(e) => {
               setAIMessage(e.target.value)
             }} placeholder={"What do you wanna ask about this?"}></input>

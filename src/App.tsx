@@ -2,17 +2,18 @@ import  {useEffect, useState} from 'react';
 import {  Routes, Route, Navigate  } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import TopicNav from './components/TopicNav';
-import ToolPage from './components/ToolPage';
 import Home from './components/Home';
 import Premium from './components/Premium';
 import NoteTaker from "./components/NoteTaker.tsx";
 import CertificationPage from "./components/Certification.tsx";
 import ActionNavbar from "./components/ActionNavbar.tsx"
 import ProfilePage from "./components/ProfilePage.tsx"
+import LoadingSpinner from "./components/LoadingSpinner.tsx"
 import Success from "./components/Success";
 import {isPremium} from "./database/database.ts";
 
 import {Toaster} from "react-hot-toast";
+
 
 
 import {
@@ -33,23 +34,23 @@ function Form({user, className=""}: FormProps) {
 
   return (<form action="https://formspree.io/f/movwepjz"
                 method="POST"
-                className={"h-full w-[50vw] mx-auto justify-center flex flex-col gap-4 p-20 rounded-md " + className}>
-    <p className={"text-2xl font-light"}> Have any questions? </p>
+                className={"h-full w-[60%] mx-auto justify-center flex flex-col gap-4 p-20 rounded-md " + className}>
+    <p className={"text-2xl font-light"}> Have any questions or concerns? </p>
     <p className={"font-light text-xl"}>We'll solve them for you in 24 to 48 business hours.</p>
 
-    <div className={"flex flex-col gap-4 text-white"}>
+    <div className={"flex flex-col gap-4 text-gray-600"}>
       <input className={"hidden"} name={"UserUID"} value={user ? user.uid:"guest"}></input>
-      <input  required={true} placeholder="Name" name="Name" className={"w-full h-[50px] border-2 bg-gray-800 p-2"}/>
-      <input required={true} placeholder="Email" name={"Email"} type={"email"} className={"w-full h-[50px] border-2  bg-gray-800 p-2"}/>
-      <textarea required={true} placeholder={"Message"} name={"Message"} className={"border-2  min-h-[20vh] bg-gray-800 p-2"}></textarea>
-      <button type={"submit"} className={"hover:brightness-90 bg-gray-800 h-12"} >Submit</button>
+      <input  required={true} placeholder="Name" name="Name" className={"w-full h-[50px] border-2 border-gray-800 p-2"}/>
+      <input required={true} placeholder="Email" name={"Email"} type={"email"} className={"w-full h-[50px] border-2  border-gray-800 p-2"}/>
+      <textarea required={true} placeholder={"Message"} name={"Message"} className={"border-2  min-h-[20vh] border-2 border-gray-800 p-2"}></textarea>
+      <button type={"submit"} className={"hover:bg-gray-800 hover:text-white h-12 border-2 border-gray-800 transition   "} >Submit</button>
     </div>
 
   </form> )
 }
 const AboutPage = () => {
   return (
-      <div className="w-full max-w-3xl mx-auto mt-32 px-4 text-black font-light">
+      <div className="w-full max-w-3xl mx-auto mt-16 px-4 text-black font-light">
         <h1 className="text-4xl font-bold text-center mb-6">About PwnPrep</h1>
 
         <p className="text-xl mb-4">
@@ -86,7 +87,6 @@ function App() {
   useEffect(() => {
     if (!user) return;
     isPremium().then((response) => {
-      console.log("Is premium: ", response);
       setPremium(response);
     });
   }, [user]);
@@ -102,17 +102,10 @@ function App() {
 
   const [isParamsModalOpen, setIsParamsModalOpen] = useState(false);
 
-  // const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  //
-  // const toggleSection = (section: string) => {
-  //   setOpenSections(prev => ({
-  //     ...prev,
-  //     [section]: !prev[section]
-  //   }));
-  // };
+
 
   if (loading){
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Loading...</div>;
+    return <LoadingSpinner parentClassName={"items-center w-full h-[100vh]"} spinnerClassName={"bg-purple-600"} />
   }
   return (
     <div>
@@ -128,8 +121,8 @@ function App() {
 
 
         <Routes>
-          <Route path="/" element={<Home user={user}/>}  />
-          <Route path="/home" element={<Home user={user}/>}  />
+          <Route path="/" element={<Home />}  />
+          <Route path="/home" element={<Home />}  />
 
           <Route path="/about" element={<AboutPage />}  />
 
@@ -139,11 +132,11 @@ function App() {
 
           <Route path="/premium" element={<Premium user={user}/>} />
 
-          <Route path="/tools/:toolId/:sectionId" element={<ToolPage type={"tool"} />} />
-          <Route path="/tools/:toolId" element={<Navigate to="overview" replace />} />
+          {/*<Route path="/tools/:toolId/:sectionId" element={<ToolPage type={"tool"} />} />*/}
+          {/*<Route path="/tools/:toolId" element={<Navigate to="overview" replace />} />*/}
 
-          <Route path="/ports/:toolId" element={<Navigate to="common-ports" replace />} />
-          <Route path="/ports/:toolId/:sectionId" element={<ToolPage type={"port"}/>} />
+          {/*<Route path="/ports/:toolId" element={<Navigate to="common-ports" replace />} />*/}
+          {/*<Route path="/ports/:toolId/:sectionId" element={<ToolPage type={"port"}/>} />*/}
 
           <Route path="/notes" element={<NoteTaker user={user} actionBarToggled={actionBarToggled} />} />
 

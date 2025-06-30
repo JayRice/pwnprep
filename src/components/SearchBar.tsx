@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
-import { tools } from '../data/routes';
-import { commonPorts } from '../data/ports';
+
 import  certifications from "../data/certifications.ts"
 
 import {Certification} from "../data/interfaces.ts"
@@ -29,21 +28,21 @@ export default function SearchBar({ onSelect, variant = 'default', classNames=""
 
   // Combine all searchable items
   const searchResults: SearchResult[] = [
-    ...tools.map(tool => ({
-      ...tool,
-      type: 'tool' as const
-    })),
-    // ...certifications.map(cert => ({
-    //   ...cert,
-    //   type: 'certification' as const
+    // ...tools.map(tool => ({
+    //   ...tool,
+    //   type: 'tool' as const
     // })),
-    ...commonPorts.map(port => ({
-      id: `port-${port.port}`,
-      title: `${port.service} (Port ${port.port})`,
-      description: port.description,
-      path: `/ports/${port.port}`,
-      type: 'port' as const
-    })),
+    // // ...certifications.map(cert => ({
+    // //   ...cert,
+    // //   type: 'certification' as const
+    // // })),
+    // ...commonPorts.map(port => ({
+    //   id: `port-${port.port}`,
+    //   title: `${port.service} (Port ${port.port})`,
+    //   description: port.description,
+    //   path: `/ports/${port.port}`,
+    //   type: 'port' as const
+    // })),
 
 
       ...certifications.map((cert : Certification) => ({

@@ -41,7 +41,7 @@ function Premium({user} : Props) {
               <SubscribeForm user={user}/>
             </Elements>
           </div>
-          <p className={"font-light text-center mt-2"}> Powered by <span className={"text-purple-600 font-bold"}>Stripe</span></p>
+          <p className={"font-light text-center mt-2"}> Powered And Secured By <span className={"text-purple-600 font-bold"}>Stripe</span></p>
         </div>
       </div>
     </div>

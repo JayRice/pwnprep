@@ -1,13 +1,10 @@
-import { TargetParams } from '../data/interfaces.ts';
 import {getCustomParams} from "../database/database.ts";
 
-import {PLACEHOLDERS} from "../data/data.ts"
 
 /**
  * List of all placeholder keys used in commands.
  * Add any new placeholder key here to have it automatically handled by replaceParams and revertParams.
  */
-import {useStore} from "../store/useStore.ts"
 
 /**
  * Replaces all placeholders (e.g., `[target_host]`) in the given command string
@@ -20,17 +17,7 @@ export async function replaceParams (
     let result = command;
 
 
-    const targetParams = useStore.getState().targetParams;
 
-    // for (const key of PLACEHOLDERS) {
-    //
-    //     const placeholder = `[${key}]`;
-    //     const value = targetParams[key] || placeholder;
-    //     // Construct a global regex to match the exact placeholder.
-    //     const regex = new RegExp(`\\[${key}\\]`, 'g');
-    //     if(!regex) continue
-    //     result = result.replace(regex, value);
-    // }
 
     const customParams = await getCustomParams();
     for (const custom of customParams) {
@@ -59,20 +46,7 @@ export async function revertParams  (
 ): Promise<string>  {
     let result = command;
 
-    const targetParams = useStore.getState().targetParams;
 
-    //
-    // for (const key of PLACEHOLDERS) {
-    //     const value = targetParams[key];
-    //     if (!value) continue; // Skip if no value provided
-    //
-    //     // Escape special regex characters in the value to safely build a search regex
-    //     const safeValue = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    //     const regex = new RegExp(safeValue, 'g');
-    //     const placeholder = `[${key}]`;
-    //
-    //     result = result.replace(regex, placeholder);
-    // }
 
     const customParams = await getCustomParams();
 

@@ -1,9 +1,8 @@
 import React, {JSX, useEffect} from "react"
-import {AlignLeft, Archive, Code, Tag, Trash, Undo2, X} from "lucide-react";
+import {AlignLeft, Archive, Code, Plus, Tag, Trash, Undo2, X} from "lucide-react";
 
 import {Note, Label} from "../data/interfaces.ts";
 import CodeBlock from "./CodeBlock.tsx";
-import {useStore} from "../store/useStore.ts";
 import {revertParams} from "../regex/regex.ts";
 
 
@@ -32,7 +31,6 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
 
     })
 
-    const {targetParams} = useStore();
 
     const handleContextMenu = (e: React.MouseEvent, index: number) => {
         e.preventDefault(); // disable default right-click
@@ -114,10 +112,8 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
             setNotes(notes.map((note) => {
                 if (note.id == expandedNoteId){
                     const index = note.content.findIndex((cont) => {
-                        console.log( codeBlockId)
                         return cont.id == codeBlockId
                     })
-                    console.log("index: ", index)
                     note.content[index].content = reverted
                 }
                 return note;
@@ -166,13 +162,55 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
                 jsx.push(<CodeBlock key={block.id} id={block.id} inNotes={true} onContextMenu={(e) => handleContextMenu(e, i)} interactive={true}
                                     refactoredCode={ note.content[i].content} code={note.content[i].content} className={"mb-4"}  updateCodeContent={updateCodeContent}
                                     closeParent={() => {
-                                        console.log("Closing")
                                         setExpandedNoteId(null);
                                     }}/>);
             }
         }
         return (jsx);
     }
+
+    const noteLabels : JSX.Element[] = labels.map(label => {
+        // grab the expanded note (or undefined if none)
+        const note = notes.find(n => n.id === expandedNoteId);
+
+        if (!note) return <div></div>;
+
+        // true if that note has this label
+        const isSelected = note?.labels.includes(label.id) ?? false;
+
+        // only inject the classes when selected
+        const selectedClasses = isSelected
+            ? " bg-purple-100 text-purple-700"
+            : "";
+
+        return (
+            <button
+                key={label.id}
+                onClick={() => handleAddNoteLabel(label.id)}
+                className={
+                    "flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                    + selectedClasses
+                }
+            >
+                <Plus className="h-4 w-4 mr-2" />
+                {label.name}
+            </button>
+        );
+    });
+    const handleAddNoteLabel = (labelId: string) => {
+
+        setNotes(notes.map(n =>
+                n.id === expandedNoteId
+                    ? {
+                        ...n,
+                        labels: n.labels.includes(labelId)
+                            ? n.labels.filter(id => id !== labelId)  // remove
+                            : [...n.labels, labelId]                  // add
+                    }
+                    : n
+            )
+        );
+    };
 
     const updateNoteInLine = (noteId: string, updates: Partial<Note>) => {
         setNotes(notes.map(note =>
@@ -241,11 +279,9 @@ export default function NoteModal({modalRef, indexSelected, notes, setNotes, set
                             </button>
 
                             {isLabelsDropdownOpen &&
-                                (<div className="absolute  mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 p-1 max-h-[8rem] overflow-y-scroll">
+                                (<div className="absolute flex flex-col mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 p-1 max-h-[8rem] overflow-y-scroll">
 
-                                    {labels.map(label => (
-                                        <span key={label.id}>{label.name}</span>
-                                    ))}
+                                    {noteLabels}
 
 
                                 </div>)

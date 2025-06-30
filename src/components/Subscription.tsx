@@ -1,11 +1,17 @@
 import {useState} from "react"
+import {useStore} from "../store/useStore.ts"
 interface Props {
     user: import('firebase/auth').User | null;
 
 }
 
 export default function SubscribeForm ({ user }: Props) {
+
+    const isPremium = useStore((state) => state.isPremium);
+
     const [isDisabled, setIsDisabled] = useState(false);
+
+
 
     const handleClick = () => {
         setIsDisabled(true);
@@ -29,7 +35,6 @@ export default function SubscribeForm ({ user }: Props) {
         });
 
         const { url } = await res.json();
-        console.log(url)
         window.location.href = url;
     };
 
@@ -38,10 +43,12 @@ export default function SubscribeForm ({ user }: Props) {
             <button   disabled={isDisabled}
                       onClick={(e) =>
                       {
-                          handleClick()
                           e.preventDefault();
+
+                          if (isDisabled || isPremium){return}
+                          handleClick()
                           handleSubscribe();
-                      }} type="submit" className={"text-white p-2 rounded-lg w-full h-16 text-2xl " + (isDisabled ? "bg-purple-900 cursor-not-allowed":"bg-purple-600 hover:bg-purple-800")}>{isDisabled ? "Redirecting":"Subscribe"}</button>
+                      }} type="submit" className={"text-white p-2 rounded-lg w-full h-16 text-2xl " + (isDisabled || isPremium ? "bg-purple-900 cursor-not-allowed":"bg-purple-600 hover:bg-purple-800")}>{isDisabled ? "Redirecting": isPremium ? "Premium Active":"Subscribe"}</button>
         </form>
     );
 };

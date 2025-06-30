@@ -1,11 +1,25 @@
 import {useStore} from "../store/useStore.ts"
+import {useState} from "react";
+import {useNavigate} from "react-router-dom";
 import {Link} from "react-router-dom";
+import {delete_user, cancel_subscription} from "../database/firebase.ts"
+import {toast, Toaster} from "react-hot-toast";
+
+import ConfirmationModal from "./ConfirmationModal.tsx"
+
+
+
 interface Props {
     user:import('firebase/auth').User | null;
 }
 export default function ProfilePage({user} : Props) {
     const premium = useStore((state) => state.isPremium);
 
+    const navigate = useNavigate();
+
+
+    const [isDeletingUser, setIsDeletingUser] = useState(false);
+    const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
     if (!user) {
 
         return (
@@ -17,6 +31,36 @@ export default function ProfilePage({user} : Props) {
     * */
     return (
         <div className={"flex justify-center w-full h-full"}>
+            <Toaster position={"bottom-right"}></Toaster>
+
+            {isDeletingUser &&
+                <ConfirmationModal confirming_reason={"Delete User"} cancel_callback={() => setIsDeletingUser(false)} confirm_callback={ async () => {
+                    try{
+                        await delete_user("google")
+                        toast("Successfully Deleted User")
+                        navigate("/")
+
+                    }catch(error){
+
+                        setIsDeletingUser(false)
+                        toast("Something went wrong, try again later! " + error)
+                    }
+
+                }}/>
+            }
+
+            {isCancelingSubscription &&
+                <ConfirmationModal confirming_reason={"End Your Subscription"} description={"Your premium features will be disabled at the end of your billing period."} cancel_callback={() => setIsCancelingSubscription(false)} confirm_callback={ async () => {
+                try{
+                    await cancel_subscription();
+                    toast("Successfully Cancelled Subscription, Come Back Soon!")
+                    navigate("/")
+                }catch(error){
+                    setIsCancelingSubscription(false);
+                    toast("Something went wrong, try again later! " + error)
+                }
+
+            }}/>}
 
             <div className=" w-[40vw] h-[70vh] rounded-lg bg-purple-600 mt-12 text-white p-4">
 
@@ -31,15 +75,17 @@ export default function ProfilePage({user} : Props) {
 
 
                 <div className={"flex flex-row gap-4"}>
-                    <button className="text-white-600 text-2xl mb-6 text-blue-400 underline hover:text-blue-800 transition-colors"> Reset Password </button>
-
-                    <button className="text-white-600 text-2xl mb-6 text-blue-400 underline hover:text-blue-800 transition-colors"> Sign Out </button>
 
 
-                    {premium && <button className=" text-2xl mb-6  text-blue-400 underline hover:text-blue-800 transition-colors"> Cancel Subscription  </button>}
+
+                    {premium && <button onClick={() => {
+                        setIsCancelingSubscription(true)
+                    }} className=" font-bold text-2xl mb-6  text-red-600 underline hover:text-red-800 transition-colors"> Cancel Subscription  </button>}
 
                 </div>
-                <button className="text-2xl mt-14 text-red-400 underline hover:text-red-800 transition-colors"> Delete Account </button>
+                <button onClick={() => {
+                    setIsDeletingUser(true);
+                }} className="font-bold text-2xl mt-14 text-red-600 underline hover:text-red-800 transition-colors"> Delete Account </button>
 
 
 

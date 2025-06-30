@@ -1,3 +1,4 @@
+import {TargetParams} from "./interfaces.ts"
 export const PLACEHOLDERS: Array<keyof TargetParams> = [
     'target_host',
     'user',

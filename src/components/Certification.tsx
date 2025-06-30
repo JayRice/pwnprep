@@ -4,7 +4,7 @@ import { useParams, Link  } from 'react-router-dom';
 import CodeBlock from './CodeBlock';
 import toast, { Toaster } from 'react-hot-toast';
 
-import {getPremiumContent, isPremium} from "../database/database.ts";
+import {getPremiumContent} from "../database/database.ts";
 
 import {useStore} from "../store/useStore.ts"
 
@@ -33,7 +33,6 @@ export default function CertificationPage() {
     const { certId, sectionId } =  useParams<{ certId: string; sectionId?: string }>();
 
 
-    const { targetParams } = useStore();
 
 
 
@@ -45,6 +44,8 @@ export default function CertificationPage() {
 
     const message = useRef("Loading...")
 
+    const bodyRef = useRef<HTMLDivElement>(null);
+
 
 
     useEffect(() => {
@@ -54,12 +55,15 @@ export default function CertificationPage() {
         }
         getPremiumContent({certId:certId, sectionId: sectionId}).then((result) => {
 
+            if(bodyRef.current){
+                bodyRef.current.scrollIntoView({ behavior: "smooth"});
+            }
             setCert(result);
 
-        }).catch((err) => {
-            return toast("You have to be premium to access this feature!")
+        }).catch(() => {
 
-            message.current = err.message;
+            return toast("Login to use this feature")
+
         })
     }, [certId, sectionId]);
 
@@ -131,7 +135,7 @@ export default function CertificationPage() {
 
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div ref={bodyRef} className="flex min-h-screen bg-gray-50">
             <Toaster position="bottom-right"/>
 
             {/* Sidebar */}
@@ -159,7 +163,6 @@ export default function CertificationPage() {
                                         onClick={() => {
 
                                             setSectionIndex(index);
-                                            console.log(index)
                                         }}
                                         className={`block px-4 py-2 rounded-md grow-1 ${
                                             currentSection.id === section.id
@@ -185,11 +188,11 @@ export default function CertificationPage() {
 
             {/* Main content */}
             <div className="flex-1 pl-64">
-                <div className="max-w-4xl mx-auto px-8 py-8">
-                    <div className="prose max-w-none">
+                <div className="max-w-4xl mx-auto px-8 py-8 ">
+                    <div  className="prose max-w-none  ">
 
 
-                        <div key={cert.section.id} id={cert.section.id} className="mb-12">
+                        <div  key={cert.section.id} id={cert.section.id} className="mb-12 mt-24 ">
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">{cert.section.title}</h2>
                             <p className="text-gray-700 mb-6">{cert.section.content}</p>
 

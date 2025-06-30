@@ -15,6 +15,7 @@ interface Props {
 
 import CodeBlock from "./CodeBlock";
 import {useStore} from "../store/useStore.ts";
+import LoadingSpinner from "./LoadingSpinner.tsx";
 
 
 
@@ -54,6 +55,11 @@ export default function ChatBot({user, conversation, setConversation} : Props){
                 if (typeof convo === "object" && convo !== null && "messages" in convo){
                     setConversation(convo as Conversation)
 
+                }else{
+                    setConversation({
+                        messages: [],
+                        updatedAt: new Date().toISOString(),
+                    })
                 }
             })
         }
@@ -82,6 +88,8 @@ export default function ChatBot({user, conversation, setConversation} : Props){
     }
     const postMessage = async (message: Message) => {
 
+
+        console.log(message)
         const user = getAuth().currentUser;
         if(!user) throw new Error("Not signed in");
 
@@ -145,11 +153,13 @@ export default function ChatBot({user, conversation, setConversation} : Props){
             return {
                 ...prev,
                 messages: [...prev.messages, userMessage],
-                updatedAt: Date.now(),
+                updatedAt: new Date().toISOString(),
             };
         });
         setBotThinking(true);
+        console.log('Posting')
         postMessage(userMessage).then((response) => {
+            console.log("Posted")
             setBotThinking(false);
             if(!response){
                 return toast("Something went wrong - try again later.");
@@ -159,7 +169,6 @@ export default function ChatBot({user, conversation, setConversation} : Props){
             const messages: Message[] = []
 
             const parsed = parseTaggedResponse(response.content);
-            console.log("PArsed: ", parsed, response)
 
             if(!parsed){
                 return toast("Something went wrong - try again later.");
@@ -185,7 +194,7 @@ export default function ChatBot({user, conversation, setConversation} : Props){
                 return {
                     ...prev,
                     messages: [...prev.messages, ...messages],
-                    updatedAt: Date.now(),
+                    updatedAt: new Date().toISOString(),
                 };
             });
 
@@ -201,6 +210,9 @@ export default function ChatBot({user, conversation, setConversation} : Props){
 
 
     return (<div className="w-full h-full p-2 overflow-hidden">
+            <div>
+                <p className={"font-light text-gray-400 text-center cursor-default text-xs"}>Does not remember past messages</p>
+            </div>
             <div className="h-[50vh] m-4 mb-12 flex flex-col justify-between gap-4 p-2 pr-4 overflow-y-auto custom-scrollbar">
 
                 <div className="bg-purple-700 w-full p-3 rounded-lg break-words overflow-wrap break-word whitespace-pre-wrap">
@@ -234,6 +246,7 @@ export default function ChatBot({user, conversation, setConversation} : Props){
                 {isBotThinking && (
                     <div className="bg-purple-700 w-full p-3 rounded-lg break-words whitespace-pre-wrap overflow-wrap break-word text-white">
                         <p className="text-xl">Thinking...</p>
+                        <LoadingSpinner></LoadingSpinner>
                     </div>
                 )}
             </div>
@@ -259,6 +272,7 @@ export default function ChatBot({user, conversation, setConversation} : Props){
                     onClick={() => {
                         setAIMessage("");
                         if (userMessage.trim() !== "") {
+
 
                             addMessage(userMessage);
                             setUserMessage("");

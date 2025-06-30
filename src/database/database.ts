@@ -18,14 +18,18 @@ onAuthStateChanged(getAuth(), async user => {
     const snap = await getDoc(userRef);
 
     if (!snap.exists()) {
-        // This will create the doc with an empty notes array, but won’t overwrite it if it already exists:
         await setDoc(
             userRef,
             {
-                labels: []
+                loggedInCount: 1,
+                createdAt: Date.now()
             },
-            { merge: true }
         );
+    }else{
+        await setDoc(userRef, {
+            loggedInCount: snap.data().loggedInCount + 1,
+            lastLogAt: Date.now()
+        }, { merge: true })
     }
 
 });
@@ -45,31 +49,6 @@ export async function addNoteToUser(note: Note) {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {id: _unused, ...data} = note;
     await setDoc(noteRef, data);
-}
-export async function removeToken(userId: string) {
-    const user = getAuth().currentUser;
-    if(!user) throw new Error("Not signed in");
-
-    const token = await user.getIdToken();
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/premium/remove_token`, {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            content:{
-                uid: userId
-            }
-        })
-    });
-    const json = await res.json();
-    if(!res.ok){
-
-        throw new Error(json.error.message);
-    }
-
 }
 export async function addMessageToConversation(newMessages: Message[]) {
     const auth = getAuth();
