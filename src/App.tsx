@@ -14,6 +14,8 @@ import {isPremium} from "./database/database.ts";
 
 import {Toaster} from "react-hot-toast";
 
+import {Settings, ClipboardPen, Bot} from "lucide-react"
+
 
 
 import {
@@ -73,6 +75,48 @@ const AboutPage = () => {
   );
 };
 
+const HowToPage = () => {
+
+  return (
+      <div className="w-full max-w-3xl mx-auto mt-16 px-4 text-black font-light">
+        <h1 className="text-4xl font-bold text-center mb-6">How To PwnPrep</h1>
+
+
+        <p className="text-xl mb-4 text-center">
+          Confused on where everthing is and how it works? Watch this short video:
+        </p>
+
+        <div className="w-full flex h-full">
+          <iframe
+              className={"w-full h-[50vh]"}
+              src="https://www.youtube.com/embed/eviJmtSewuo"
+              title="How To PwnPrep"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen>
+          </iframe>
+        </div>
+
+        <p className="text-xl mb-4 flex flex-row justify-center items-center gap-4 mt-8">
+          <Settings className={"w-16 h-16 text-purple-800"}></Settings>
+          Remember you can change your target parameters by pressing the settings icon button on the bottom-left corner of the screen!
+
+        </p>
+        <p className="text-xl mb-4 flex flex-row justify-center items-center gap-4 mt-8">
+          <ClipboardPen className={"w-12 h-16 text-purple-800"}></ClipboardPen>
+          Take Notes by pressing the clipboard icon button towards the top-left corner of the screen!
+
+        </p>
+        <p className="text-xl mb-4 flex flex-row justify-center items-center gap-4 mt-8 mb-16">
+          <Bot className={"w-16 h-16 text-purple-800"}></Bot>
+          <span>And as a <span className={"text-purple-800"}>Premium</span> user, press the Robot Icon towards the top-left corner of the screen to talk to your own
+          AI cybersecurity expert</span>
+
+        </p>
+      </div>
+
+  )
+}
+
 
 function App() {
   const [user, setUser] = useState<import('firebase/auth').User | null>(null)
@@ -125,6 +169,8 @@ function App() {
           <Route path="/home" element={<Home />}  />
 
           <Route path="/about" element={<AboutPage />}  />
+
+          <Route path="/howto" element={<HowToPage/>} />
 
           <Route path={"/contact"} element={<Form user={user} className={"flex justify-center w-full"}/>} />
 
