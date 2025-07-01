@@ -744,19 +744,19 @@ export default function NoteTaker({user, actionBarToggled}: NoteTakerProps) {
             </div>
 
             {/* Main content */}
-            <div className={` ${handleToggleLogic("ml-8", "ml-[20%]", "ml-[5%]", "ml-[23%]")} pl-6 position-transition `}>
+            <div className={` ${handleToggleLogic("ml-8", "ml-[20%]", "ml-[5%]", "ml-[23%]")} position-transition `}>
 
-                <div className={"p-16"}>
+                <div className={"p-16 w-full flex justify-center"}>
                     <input placeholder={"Search Notes"}
                            value={searchValue}
                            onChange={(e) => setSearchValue(e.target.value)}
-                           className={"w-full h-16 rounded-md p-4 relative bottom-32 border-2 border-gray-300"}/>
+                           className={"max-w-[50vw]  w-full h-16 rounded-md p-4 relative bottom-32 border-2 border-gray-300"}/>
                 </div>
                 <button
                     onClick={addNote}
 
 
-                    className={`fixed bottom-16 ${actionBarToggled ? "left-[-10%]":"left-2"} bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99] position-transition`}
+                    className={`${actionBarToggled ? "left-[-10%]":"left-2"} fixed bottom-16 bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors z-[99] position-transition`}
                 >
                     <Plus className="h-6 w-6" />
                 </button>

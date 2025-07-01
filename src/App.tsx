@@ -123,7 +123,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
 
-  const [actionBarToggled, setActionBarToggled] = useState<boolean>(false);
+  const [actionBarToggled, setActionBarToggled] = useState<boolean>(window.innerWidth <= 768 );
 
 
   const setPremium = useStore((store) => store.setIsPremium);

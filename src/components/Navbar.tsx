@@ -143,13 +143,14 @@ export default function Navbar({ user, premium  }: NavProps) {
                   <span>{premium ? 'Premium Active' : 'Premium'}</span>
                 </Link>
                 {user != null ? (
-                    <button
-                        onClick={() => setIsProfileDropdownOpen(prev => !prev)}
-                        className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
-                    >
-                      <UserCircle className="h-5 w-5 mr-2" />
-                      <span>Profile</span>
-                    </button>
+                      <button
+                          onClick={() => setIsProfileDropdownOpen(prev => !prev)}
+                          className="flex w-full items-center px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                      >
+                        <UserCircle className="h-5 w-5 mr-2" />
+                        <span>Profile</span>
+                      </button>
+
                 ) : (
                     <button
                         onClick={() => setIsLoginModalOpen(true)}
@@ -161,7 +162,9 @@ export default function Navbar({ user, premium  }: NavProps) {
                 )}
               </div>
               {isProfileDropdownOpen && isMenuOpen && (
-                  <div className="absolute  mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                  <div ref={dropdownRef}>
+
+                    <div className="absolute  mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
                         to="/profile"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -181,6 +184,7 @@ export default function Navbar({ user, premium  }: NavProps) {
                     >
                       Logout
                     </button>
+                  </div>
                   </div>
               )}
             </div>
