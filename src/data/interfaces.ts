@@ -47,3 +47,10 @@ export interface Certification  {
     icon: string;
     path: string;
 }
+
+export interface Subscription {
+    status: string;
+    subscription_id: string;
+    start_date: number;
+    current_period_end: number;
+}

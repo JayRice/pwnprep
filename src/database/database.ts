@@ -282,6 +282,20 @@ export async function getCustomParams(){
 
 }
 
+export async function getSubscription(){
+    const user = getAuth().currentUser;
+    if(!user) throw new Error("Not signed in");
+
+    const subscriptionRef = doc(db, "users", user.uid, "subscription", "default");
+
+    const snapshot = await getDoc(subscriptionRef);
+
+
+    return snapshot.data();
+
+}
+
+
 
 export async function getPremiumContent(content: Record<string, string>) {
     const user = getAuth().currentUser;
@@ -307,6 +321,7 @@ export async function getPremiumContent(content: Record<string, string>) {
 
     }
 }
+
 
 export async function isPremium() {
 

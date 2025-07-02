@@ -1,11 +1,17 @@
 import {useStore} from "../store/useStore.ts"
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import {Link} from "react-router-dom";
 import {delete_user, cancel_subscription} from "../database/firebase.ts"
+import {getSubscription} from "../database/database.ts"
+
+import {Subscription} from "../data/interfaces.ts";
+
 import {toast, Toaster} from "react-hot-toast";
 
 import ConfirmationModal from "./ConfirmationModal.tsx"
+import LoadingSpinner from "./LoadingSpinner.tsx"
+
 
 
 
@@ -20,6 +26,28 @@ export default function ProfilePage({user} : Props) {
 
     const [isDeletingUser, setIsDeletingUser] = useState(false);
     const [isCancelingSubscription, setIsCancelingSubscription] = useState(false);
+
+    const [isFetchingSubscription, setIsFetchingSubscription] = useState(false);
+
+    const [subscription, setSubscription] = useState<Subscription | null>(null);
+
+
+    useEffect(() => {
+
+        const fetchSub = async () => {
+            try {
+                const sub = await getSubscription();
+                console.log("Subscription: ", sub)
+                if (sub) setSubscription(sub as Subscription);
+            } catch (err) {
+                console.error("Failed to fetch subscription:", err);
+            }
+            setIsFetchingSubscription(false)
+        };
+
+        setIsFetchingSubscription(true)
+        fetchSub();
+    }, []);
     if (!user) {
 
         return (
@@ -71,6 +99,10 @@ export default function ProfilePage({user} : Props) {
                 <p className="text-2xl mb-6"> Email: {user.email}</p>
 
                 <p className="text-2xl mb-6"> Premium : {premium ? "Active":"Inactive"} </p>
+
+                <p className="text-2xl mb-6 flex flex-row gap-4"> Subscription : {isFetchingSubscription ? <LoadingSpinner  spinnerClassName={"text-purple-600"}/> : subscription  ? subscription.status: "Inactive"} </p>
+
+
 
 
 
