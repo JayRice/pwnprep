@@ -286,12 +286,15 @@ export async function getSubscription(){
     const user = getAuth().currentUser;
     if(!user) throw new Error("Not signed in");
 
-    const subscriptionRef = doc(db, "users", user.uid, "subscription", "default");
+    const docRef = doc(db, "users", user.uid);
+    const snapshot = await getDoc(docRef);
 
-    const snapshot = await getDoc(subscriptionRef);
+    if (snapshot.exists()) {
+        const data = snapshot.data();
 
-
-    return snapshot.data();
+        return data.subscription
+    }
+    return null;
 
 }
 
