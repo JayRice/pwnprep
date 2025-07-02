@@ -22,14 +22,22 @@ export default function Navbar({ user, premium  }: NavProps) {
 
 
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRefDesktop = useRef<HTMLDivElement>(null);
+  const dropdownRefMobile = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
 
 
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      // Only one of these should be visible at a time
+      const target = event.target as Node;
+
+      const desktopVisible = dropdownRefDesktop.current && dropdownRefDesktop.current.contains(target);
+      const mobileVisible = dropdownRefMobile.current && dropdownRefMobile.current.contains(target);
+
+      if (!desktopVisible && !mobileVisible) {
         setIsProfileDropdownOpen(false);
       }
     };
@@ -64,7 +72,7 @@ export default function Navbar({ user, premium  }: NavProps) {
                 <span>{premium ? 'Premium Active' : 'Premium'}</span>
               </Link>
               {user != null ? (
-                  <div className="relative" ref={dropdownRef}>
+                  <div className="relative" ref={dropdownRefDesktop}>
                     <button
                         onClick={() => setIsProfileDropdownOpen(prev => !prev)}
                         className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
@@ -162,7 +170,7 @@ export default function Navbar({ user, premium  }: NavProps) {
                 )}
               </div>
               {isProfileDropdownOpen && isMenuOpen && (
-                  <div ref={dropdownRef}>
+                  <div ref={dropdownRefMobile}>
 
                     <div className="absolute  mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     <Link
