@@ -292,6 +292,7 @@ export async function getSubscription(){
     if (snapshot.exists()) {
         const data = snapshot.data();
 
+        console.log("Subscription: ", data.subscription)
         return data.subscription
     }
     return null;
