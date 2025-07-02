@@ -98,9 +98,11 @@ export default function ProfilePage({user} : Props) {
 
                 <p className="text-2xl mb-6"> Email: {user.email}</p>
 
-                <p className="text-2xl mb-6"> Premium : {premium ? "Active":"Inactive"} </p>
+                <p className="text-2xl mb-6"> Premium: {premium ? "Active":"Inactive"} </p>
 
-                <p className="text-2xl mb-6 flex flex-row gap-4"> Subscription : {isFetchingSubscription ? <LoadingSpinner  spinnerClassName={"text-purple-600"}/> : subscription  ? subscription.status: "Inactive"} </p>
+                {subscription &&
+                    <p className="text-2xl mb-6 flex flex-row gap-4"> Subscription: {isFetchingSubscription ? <LoadingSpinner  spinnerClassName={"text-purple-600"}/> : subscription  ? subscription.status.charAt(0).toUpperCase() + subscription.status.slice(1): "Inactive"} </p>
+                }
 
 
 
@@ -110,9 +112,12 @@ export default function ProfilePage({user} : Props) {
 
 
 
-                    {premium && <button onClick={() => {
-                        setIsCancelingSubscription(true)
-                    }} className=" font-bold text-2xl   text-red-600 underline hover:text-red-800 transition-colors"> Cancel Subscription </button>}
+                    {(subscription && subscription.status == "active") &&
+                        (premium && <button onClick={() => {
+                            setIsCancelingSubscription(true)
+                        }} className=" font-bold text-2xl   text-red-600 underline hover:text-red-800 transition-colors"> Cancel Subscription </button>)
+
+                    }
 
                     <button onClick={() => {
                         setIsDeletingUser(true);
