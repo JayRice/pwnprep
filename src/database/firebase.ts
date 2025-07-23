@@ -13,6 +13,7 @@ import {
     onAuthStateChanged,
     deleteUser,
     reauthenticateWithPopup,
+    signInWithRedirect,
 
 
     type User
@@ -143,7 +144,14 @@ export async function delete_user(authProvider: "google" | "facebook" | "github"
     }
 }
 async function loginWithGoogle() {
-    await signInWithPopup(auth, googleProvider)
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const provider = new GoogleAuthProvider();
+
+    if (isMobile) {
+        await signInWithRedirect(auth, provider);
+    } else {
+        await signInWithPopup(auth, provider);
+    }
 }
 // async function loginWithFacebook() {
 //     await signInWithPopup(auth, facebookProvider)
